@@ -197,6 +197,11 @@ public class ToolUtils {
     }
 
     @NotNull
+    public static StorageCredentials getStorageCredentialsFromAccountAndEnv(@NotNull String accountName) {
+        return getStorageCredentialsFromAccountAndEnv(accountName, ENVIRONMENT);
+    }
+
+    @NotNull
     private static StorageCredentials getStorageCredentialsFromAccountAndEnv(String accountName, Environment environment) {
         String clientId = environment.getVariable(AZURE_CLIENT_ID);
         String clientSecret = environment.getVariable(AZURE_CLIENT_SECRET);
