@@ -1,39 +1,43 @@
 package org.apache.jackrabbit.oak.upgrade.cli.node;
 
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.blob.SharedAccessBlobPermissions;
-import com.microsoft.azure.storage.blob.SharedAccessBlobPolicy;
+import com.microsoft.azure.storage.CloudStorageAccount;
+import com.microsoft.azure.storage.SharedAccessAccountPermissions;
+import com.microsoft.azure.storage.SharedAccessAccountPolicy;
+import com.microsoft.azure.storage.SharedAccessAccountResourceType;
+import com.microsoft.azure.storage.SharedAccessAccountService;
+import com.microsoft.azure.storage.blob.CloudBlobDirectory;
 import org.apache.jackrabbit.guava.common.io.Closer;
 import org.apache.jackrabbit.oak.blob.cloud.azure.blobstorage.AzuriteDockerRule;
+import org.apache.jackrabbit.oak.segment.azure.AzureUtilities;
+import org.apache.jackrabbit.oak.segment.azure.tool.ToolUtils;
+import org.apache.jackrabbit.oak.segment.azure.util.Environment;
 import org.apache.jackrabbit.oak.upgrade.cli.CliUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.security.InvalidKeyException;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.EnumSet;
 
-import static com.microsoft.azure.storage.blob.SharedAccessBlobPermissions.ADD;
-import static com.microsoft.azure.storage.blob.SharedAccessBlobPermissions.CREATE;
-import static com.microsoft.azure.storage.blob.SharedAccessBlobPermissions.DELETE;
-import static com.microsoft.azure.storage.blob.SharedAccessBlobPermissions.LIST;
-import static com.microsoft.azure.storage.blob.SharedAccessBlobPermissions.READ;
-import static com.microsoft.azure.storage.blob.SharedAccessBlobPermissions.WRITE;
+import static org.apache.jackrabbit.oak.segment.azure.AzureUtilities.AZURE_ACCOUNT_NAME;
+import static org.apache.jackrabbit.oak.segment.azure.AzureUtilities.AZURE_CLIENT_ID;
+import static org.apache.jackrabbit.oak.segment.azure.AzureUtilities.AZURE_CLIENT_SECRET;
+import static org.apache.jackrabbit.oak.segment.azure.AzureUtilities.AZURE_TENANT_ID;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeNotNull;
 
 public class SegmentAzureFactoryTest {
 
     @ClassRule
     public static final AzuriteDockerRule azurite = new AzuriteDockerRule();
 
+    private Environment ENVIRONMENT = new Environment();
     private static final String CONTAINER_NAME = "oak-test";
-    private static final EnumSet<SharedAccessBlobPermissions> READ_WRITE = EnumSet.of(READ, LIST, CREATE, WRITE, ADD);
+    private static final String DIR = "repository";
+
 
     @Test
     public void testConnectionWithConnectionString_accessKey() throws IOException {
@@ -51,38 +55,87 @@ public class SegmentAzureFactoryTest {
         closer.close();
     }
 
-    /* this is failing on container.createIfNotExists() with sas uri
-    * */
+    /* this is failing on container.createIfNotExists() with sas uri - this requires account level sas to perform container level operations
+     * */
 
-//    @Test
-//    public void testConnectionWithConnectionString_sas() throws URISyntaxException, InvalidKeyException, StorageException, IOException {
-//        String sasToken = azurite.getContainer(CONTAINER_NAME).generateSharedAccessSignature(policy(READ_WRITE), null);
-//        String connectionStringWithPlaceholder = "DefaultEndpointsProtocol=http;AccountName=%s;SharedAccessSignature=%s;BlobEndpoint=http://127.0.0.1:%s/%s;";
-//        String connectionString = String.format(connectionStringWithPlaceholder, AzuriteDockerRule.ACCOUNT_NAME, sasToken, azurite.getMappedPort(), AzuriteDockerRule.ACCOUNT_NAME);
-//        SegmentAzureFactory segmentAzureFactory = new SegmentAzureFactory.Builder("respository", 256,
-//                false)
-//                .connectionString(connectionString)
-//                .containerName(CONTAINER_NAME)
-//                .build();
-//        Closer closer = Closer.create();
-//        CliUtils.handleSigInt(closer);
-//        FileStoreUtils.NodeStoreWithFileStore nodeStore = (FileStoreUtils.NodeStoreWithFileStore) segmentAzureFactory.create(null, closer);
-//        assertEquals(1, nodeStore.getFileStore().getSegmentCount());
-//        closer.close();
-//    }
-
-
-    @NotNull
-    private static SharedAccessBlobPolicy policy(EnumSet<SharedAccessBlobPermissions> permissions, Instant expirationTime) {
-        SharedAccessBlobPolicy sharedAccessBlobPolicy = new SharedAccessBlobPolicy();
-        sharedAccessBlobPolicy.setPermissions(permissions);
-        sharedAccessBlobPolicy.setSharedAccessExpiryTime(Date.from(expirationTime));
-        return sharedAccessBlobPolicy;
+    @Test
+    public void testConnectionWithConnectionString_sas() throws IOException {
+        String sasToken = getAccountSasToken();
+        String connectionStringWithPlaceholder = "DefaultEndpointsProtocol=http;AccountName=%s;SharedAccessSignature=%s;BlobEndpoint=http://127.0.0.1:%s/%s;";
+        String connectionString = String.format(connectionStringWithPlaceholder, AzuriteDockerRule.ACCOUNT_NAME, sasToken, azurite.getMappedPort(), AzuriteDockerRule.ACCOUNT_NAME);
+        SegmentAzureFactory segmentAzureFactory = new SegmentAzureFactory.Builder(DIR, 256,
+                false)
+                .connectionString(connectionString)
+                .containerName(CONTAINER_NAME)
+                .build();
+        Closer closer = Closer.create();
+        CliUtils.handleSigInt(closer);
+        FileStoreUtils.NodeStoreWithFileStore nodeStore = (FileStoreUtils.NodeStoreWithFileStore) segmentAzureFactory.create(null, closer);
+        assertEquals(1, nodeStore.getFileStore().getSegmentCount());
+        closer.close();
     }
 
+    @Test
+    public void testConnectionWithServicePrincipal() throws IOException {
+        assumeNotNull(ENVIRONMENT.getVariable(AZURE_ACCOUNT_NAME));
+        assumeNotNull(ENVIRONMENT.getVariable(AZURE_TENANT_ID));
+        assumeNotNull(ENVIRONMENT.getVariable(AZURE_CLIENT_ID));
+        assumeNotNull(ENVIRONMENT.getVariable(AZURE_CLIENT_SECRET));
+
+        final String CONTAINER_NAME = "oak-migration-test";
+
+        String uri = String.format("https://%s.blob.core.windows.net/%s", ENVIRONMENT.getVariable(AZURE_ACCOUNT_NAME), CONTAINER_NAME);
+        try {
+            SegmentAzureFactory segmentAzureFactory = new SegmentAzureFactory.Builder(DIR, 256,
+                    false)
+                    .accountName(ENVIRONMENT.getVariable(AZURE_ACCOUNT_NAME))
+                    .uri(uri)
+                    .build();
+
+            Closer closer = Closer.create();
+            CliUtils.handleSigInt(closer);
+            FileStoreUtils.NodeStoreWithFileStore nodeStore = (FileStoreUtils.NodeStoreWithFileStore) segmentAzureFactory.create(null, closer);
+            assertEquals(1, nodeStore.getFileStore().getSegmentCount());
+        } finally {
+            cleanup(uri);
+        }
+    }
+
+    private void cleanup(String uri) {
+        uri = uri + "/" + DIR;
+        try {
+            CloudBlobDirectory cloudBlobDirectory = ToolUtils.createCloudBlobDirectory(uri, ENVIRONMENT);
+            AzureUtilities.deleteAllBlobs(cloudBlobDirectory);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+
     @NotNull
-    private static SharedAccessBlobPolicy policy(EnumSet<SharedAccessBlobPermissions> permissions) {
-        return policy(permissions, Instant.now().plus(Duration.ofMinutes(10)));
+    private String getAccountSasToken() {
+        try {
+            CloudStorageAccount cloudStorageAccount = azurite.getCloudStorageAccount();
+            return cloudStorageAccount.generateSharedAccessSignature(getPolicy());
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private SharedAccessAccountPolicy getPolicy() {
+        SharedAccessAccountPolicy sharedAccessAccountPolicy = new SharedAccessAccountPolicy();
+        EnumSet<SharedAccessAccountPermissions> sharedAccessAccountPermissions = EnumSet.of(SharedAccessAccountPermissions.CREATE,
+                SharedAccessAccountPermissions.DELETE, SharedAccessAccountPermissions.READ, SharedAccessAccountPermissions.UPDATE,
+                SharedAccessAccountPermissions.WRITE, SharedAccessAccountPermissions.LIST);
+        EnumSet<SharedAccessAccountService> sharedAccessAccountServices = EnumSet.of(SharedAccessAccountService.BLOB);
+        EnumSet<SharedAccessAccountResourceType> sharedAccessAccountResourceTypes = EnumSet.of(
+                SharedAccessAccountResourceType.CONTAINER, SharedAccessAccountResourceType.OBJECT);
+
+        sharedAccessAccountPolicy.setPermissions(sharedAccessAccountPermissions);
+        sharedAccessAccountPolicy.setServices(sharedAccessAccountServices);
+        sharedAccessAccountPolicy.setResourceTypes(sharedAccessAccountResourceTypes);
+        sharedAccessAccountPolicy.setSharedAccessExpiryTime(Date.from(Instant.now().plus(Duration.ofDays(7))));
+        return sharedAccessAccountPolicy;
     }
 
 }
