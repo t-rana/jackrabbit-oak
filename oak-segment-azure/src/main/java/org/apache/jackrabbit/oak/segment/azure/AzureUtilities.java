@@ -16,17 +16,6 @@
  */
 package org.apache.jackrabbit.oak.segment.azure;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Paths;
-import java.security.InvalidKeyException;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-
 import com.azure.core.credential.TokenRequestContext;
 import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
@@ -47,6 +36,17 @@ import org.apache.jackrabbit.oak.segment.spi.RepositoryNotReachableException;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
+import java.security.InvalidKeyException;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
 
 public final class AzureUtilities {
     public static final String AZURE_ACCOUNT_NAME = "AZURE_ACCOUNT_NAME";
@@ -110,7 +110,7 @@ public final class AzureUtilities {
     }
 
     public static CloudBlobDirectory cloudBlobDirectoryFrom(StorageCredentials credentials,
-            String uri, String dir) throws URISyntaxException, StorageException {
+                                                            String uri, String dir) throws URISyntaxException, StorageException {
         StorageUri storageUri = new StorageUri(new URI(uri));
         CloudBlobContainer container = new CloudBlobContainer(storageUri, credentials);
 
@@ -120,7 +120,7 @@ public final class AzureUtilities {
     }
 
     public static CloudBlobDirectory cloudBlobDirectoryFrom(String connection, String containerName,
-            String dir) throws InvalidKeyException, URISyntaxException, StorageException {
+                                                            String dir) throws InvalidKeyException, URISyntaxException, StorageException {
         CloudStorageAccount cloud = CloudStorageAccount.parse(connection);
         CloudBlobContainer container = cloud.createCloudBlobClient().getContainerReference(containerName);
         container.createIfNotExists();
@@ -140,7 +140,7 @@ public final class AzureUtilities {
     }
 
     private static ResultSegment<ListBlobItem> listBlobsInSegments(CloudBlobDirectory directory,
-           ResultContinuation token) throws IOException {
+                                                                   ResultContinuation token) throws IOException {
         ResultSegment<ListBlobItem> result = null;
         IOException lastException = null;
         for (int sleep = 10; sleep <= 10000; sleep *= 10) {  //increment the sleep time in steps.
@@ -171,6 +171,18 @@ public final class AzureUtilities {
         }
     }
 
+    public static void deleteAllBlobs(@NotNull CloudBlobDirectory directory) throws URISyntaxException, StorageException, IOException {
+        for (ListBlobItem blobItem : directory.listBlobs()) {
+            if (blobItem instanceof CloudBlob) {
+                CloudBlob cloudBlob = (CloudBlob) blobItem;
+                cloudBlob.deleteIfExists();
+            } else if (blobItem instanceof CloudBlobDirectory) {
+                CloudBlobDirectory cloudBlobDirectory = (CloudBlobDirectory) blobItem;
+                deleteAllBlobs(cloudBlobDirectory);
+            }
+        }
+    }
+
     private static class ByteBufferOutputStream extends OutputStream {
 
         @NotNull
@@ -182,7 +194,7 @@ public final class AzureUtilities {
 
         @Override
         public void write(int b) {
-            buffer.put((byte)b);
+            buffer.put((byte) b);
         }
 
         @Override
