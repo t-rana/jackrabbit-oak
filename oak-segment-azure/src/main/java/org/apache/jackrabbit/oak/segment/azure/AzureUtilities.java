@@ -30,6 +30,7 @@ import com.microsoft.azure.storage.blob.BlobListingDetails;
 import com.microsoft.azure.storage.blob.CloudBlob;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlobDirectory;
+import com.microsoft.azure.storage.blob.LeaseStatus;
 import com.microsoft.azure.storage.blob.ListBlobItem;
 import org.apache.jackrabbit.oak.commons.Buffer;
 import org.apache.jackrabbit.oak.segment.spi.RepositoryNotReachableException;
@@ -171,12 +172,16 @@ public final class AzureUtilities {
         }
     }
 
-    public static void deleteAllBlobs(@NotNull CloudBlobDirectory directory) throws URISyntaxException, StorageException, IOException {
+    public static void deleteAllBlobs(@NotNull CloudBlobDirectory directory) throws URISyntaxException, StorageException, InterruptedException {
         for (ListBlobItem blobItem : directory.listBlobs()) {
             if (blobItem instanceof CloudBlob) {
                 CloudBlob cloudBlob = (CloudBlob) blobItem;
+                if (cloudBlob.getProperties().getLeaseStatus() == LeaseStatus.LOCKED) {
+                    cloudBlob.breakLease(0);
+                }
                 cloudBlob.deleteIfExists();
             } else if (blobItem instanceof CloudBlobDirectory) {
+                System.out.println("directory: " + blobItem.getUri());
                 CloudBlobDirectory cloudBlobDirectory = (CloudBlobDirectory) blobItem;
                 deleteAllBlobs(cloudBlobDirectory);
             }
