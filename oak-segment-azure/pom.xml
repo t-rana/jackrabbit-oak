@@ -32,6 +32,10 @@
 
     <name>Oak Segment Azure</name>
 
+    <properties>
+        <netty.version>4.1.109.Final</netty.version>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -46,17 +50,20 @@
                             com.fasterxml.jackson.databind*;resolution:=optional,
                             com.fasterxml.jackson.dataformat.xml;resolution:=optional,
                             com.fasterxml.jackson.datatype*;resolution:=optional,
-                            com.microsoft.aad.msal4j*;resolution:=optional,
+<!--                            com.microsoft.aad.msal4j*;resolution:=optional,-->
                             com.nimbusds.common.contenttype;resolution:=optional,
                             com.nimbusds.jose*;resolution:=optional,
                             com.nimbusds.jwt;resolution:=optional,
                             com.nimbusds.jwt.util;resolution:=optional,
-                            com.nimbusds.oauth2.sdk*;resolution:=optional,
+<!--                            com.nimbusds.oauth2.sdk*;resolution:=optional,-->
                             com.nimbusds.jwt.proc;resolution:=optional,
                             com.nimbusds.langtag;resolution:=optional,
                             com.nimbusds.openid.connect.sdk*;resolution:=optional,
                             com.nimbusds.secevent.sdk*;resolution:=optional,
                             com.sun.jna*;resolution:=optional,
+                            sun.misc;resolution:=optional,
+                            io.netty*;resolution:=optional,
+                            reactor.netty.*;resolution:=optional,
                             !org.apache.jackrabbit.oak.segment*,
                             !com.google.*,
                             !android.os,
@@ -64,6 +71,10 @@
                             !org.reactivestreams.*,
                             !reactor.core.*,
                             !reactor.util.*,
+                            !org.linguafranca.*,
+                            !net.minidev.*,
+                            !com.sun.net.httpserver,
+                            !net.jcip.annotations,
                             *
                         </Import-Package>
                         <Export-Package>
@@ -72,19 +83,28 @@
                             org.apache.jackrabbit.oak.segment.azure.util,
                             com.microsoft.azure.storage,
                             com.microsoft.azure.storage.core,
-                            com.microsoft.azure.storage.blob,
-                            com.azure.core.credential,
-                            com.azure.identity
+                            com.microsoft.azure.storage.blob
+<!--                            com.azure.core.credential,-->
+<!--                            com.azure.identity-->
                         </Export-Package>
                         <Embed-Dependency>
                             azure-storage,
                             azure-keyvault-core,
                             azure-core,
                             azure-identity,
-                            azure-identity-broker,
-                            azure-json,
-                            azure-xml,
+                            reactive-streams,
+                            msal4j-persistence-extension,
+                            msal4j,
+                            jna,
+                            reactor-core,
+                            oauth2-oidc-sdk,
+                            azure-core-http-netty,
+<!--                            azure-identity-broker,-->
+<!--                            azure-json,-->
+<!--                            azure-xml,-->
                             guava,
+                            netty-*,
+                            reactor-netty*,
                             jsr305
                         </Embed-Dependency>
                         <!-- needed to override value from oak-parent; can be removed when OAK-6741 is resolved -->
@@ -182,26 +202,141 @@
             <groupId>com.azure</groupId>
             <artifactId>azure-identity</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.azure</groupId>
-            <artifactId>azure-identity-broker</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.azure</groupId>-->
+<!--            <artifactId>azure-identity-broker</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.azure</groupId>
-            <artifactId>azure-json</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.azure</groupId>-->
+<!--            <artifactId>azure-json</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.azure</groupId>-->
+<!--            <artifactId>azure-xml</artifactId>-->
+<!--        </dependency>-->
+
+        <dependency>
+            <groupId>org.reactivestreams</groupId>
+            <artifactId>reactive-streams</artifactId>
+            <version>1.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>msal4j-persistence-extension</artifactId>
+            <version>1.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>msal4j</artifactId>
+            <version>1.9.1</version>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>5.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+            <version>3.4.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>oauth2-oidc-sdk</artifactId>
+            <version>8.23.1</version>
+        </dependency>
         <dependency>
             <groupId>com.azure</groupId>
-            <artifactId>azure-xml</artifactId>
+            <artifactId>azure-core-http-netty</artifactId>
+            <version>1.9.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-resolver</artifactId>
+            <version>${netty.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-handler</artifactId>
+            <version>4.1.109.Final</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-buffer</artifactId>
+            <version>${netty.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec</artifactId>
+            <version>${netty.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-http</artifactId>
+            <version>4.1.109.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-common</artifactId>
+            <version>${netty.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-handler</artifactId>
+            <version>${netty.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-handler-proxy</artifactId>
+            <version>4.1.109.Final</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport</artifactId>
+            <version>${netty.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.projectreactor.netty</groupId>
+            <artifactId>reactor-netty</artifactId>
+            <version>1.1.18</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.projectreactor.netty</groupId>
+            <artifactId>reactor-netty-core</artifactId>
+            <version>1.1.18</version>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor.netty</groupId>
+            <artifactId>reactor-netty-http</artifactId>
+            <version>1.1.18</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-resolver-dns</artifactId>
+            <version>4.1.109.Final</version>
+        </dependency>
+
 
 
         <!-- Azure Guava dependency -->

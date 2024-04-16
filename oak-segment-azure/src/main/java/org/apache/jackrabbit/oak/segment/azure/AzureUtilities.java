@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.oak.segment.azure;
 
 import com.azure.core.credential.TokenRequestContext;
+import com.azure.core.http.HttpClient;
 import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.microsoft.azure.storage.CloudStorageAccount;
@@ -134,9 +135,10 @@ public final class AzureUtilities {
                 .clientId(clientId)
                 .clientSecret(clientSecret)
                 .tenantId(tenantId)
+                .httpClient(HttpClient.createDefault())
                 .build();
 
-        String accessToken = clientSecretCredential.getTokenSync(new TokenRequestContext().addScopes(AZURE_DEFAULT_SCOPE)).getToken();
+        String accessToken = clientSecretCredential.getToken(new TokenRequestContext().addScopes(AZURE_DEFAULT_SCOPE)).block().getToken();
         return new StorageCredentialsToken(accountName, accessToken);
     }
 
