@@ -364,7 +364,12 @@ public class SegmentBufferWriter implements WriteOperationHandler {
 
             SegmentId segmentId = segment.getSegmentId();
             LOG.debug("Writing data segment: {} ", statistics);
-            store.writeSegment(segmentId, buffer, buffer.length - length, length);
+            try {
+                store.writeSegment(segmentId, buffer, buffer.length - length, length);
+            } catch (Throwable t) {
+                LOG.error("An error occurred while writing segment: ", t);
+                throw t;
+            }
             newSegment(store);
         }
     }
