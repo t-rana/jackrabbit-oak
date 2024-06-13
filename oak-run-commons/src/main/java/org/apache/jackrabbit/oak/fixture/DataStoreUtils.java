@@ -30,17 +30,22 @@ import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.transfer.TransferManager;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.jackrabbit.core.data.DataStoreException;
 import org.apache.jackrabbit.guava.common.base.Strings;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.data.DataStore;
+import org.apache.jackrabbit.oak.blob.cloud.azure.blobstorage.AzureBlobContainerProvider;
 import org.apache.jackrabbit.oak.blob.cloud.azure.blobstorage.AzureConstants;
 import org.apache.jackrabbit.oak.blob.cloud.azure.blobstorage.AzureDataStore;
 import org.apache.jackrabbit.oak.blob.cloud.s3.S3Constants;
 import org.apache.jackrabbit.oak.blob.cloud.s3.S3DataStore;
 import org.apache.jackrabbit.oak.blob.cloud.s3.Utils;
 import org.apache.jackrabbit.oak.stats.StatisticsProvider;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,26 +151,48 @@ public class DataStoreUtils {
     }
 
     public static void deleteAzureContainer(Map<String, ?> config, String containerName) throws Exception {
+        if (config == null) {
+            return;
+        }
         if (Strings.isNullOrEmpty(containerName)) {
             return;
         }
-        String connectionString = (String) config.get(AzureConstants.AZURE_CONNECTION_STRING);
-        if (Strings.isNullOrEmpty(connectionString)) {
-            String accountName = (String) config.get(AzureConstants.AZURE_STORAGE_ACCOUNT_NAME);
-            String accountKey = (String) config.get(AzureConstants.AZURE_STORAGE_ACCOUNT_KEY);
-            if (Strings.isNullOrEmpty(accountName) ||
-                Strings.isNullOrEmpty(accountKey)) {
-                return;
-            }
-            connectionString = org.apache.jackrabbit.oak.blob.cloud.azure.blobstorage.Utils.getConnectionString(accountName, accountKey);
+        CloudBlobContainer container = getCloudBlobContainer(config, containerName);
+        if (container == null) {
+            log.info("container is not initialized");
+            return;
         }
         log.info("deleting container [{}]", containerName);
-        CloudBlobContainer container = 
-            org.apache.jackrabbit.oak.blob.cloud.azure.blobstorage.Utils.getBlobContainer(connectionString, containerName);
         if (container.deleteIfExists()) {
             log.info("container [{}] deleted", containerName);
         } else {
             log.info("container [{}] doesn't exists", containerName);
+        }
+    }
+
+    @Nullable
+    private static CloudBlobContainer getCloudBlobContainer(@NotNull Map<String, ?> config,
+                                                            @NotNull String containerName) throws DataStoreException {
+        final String azureConnectionString = (String) config.get(AzureConstants.AZURE_CONNECTION_STRING);
+        final String clientId = (String) config.get(AzureConstants.AZURE_CLIENT_ID);
+        final String clientSecret = (String) config.get(AzureConstants.AZURE_CLIENT_SECRET);
+        final String tenantId = (String) config.get(AzureConstants.AZURE_TENANT_ID);
+        final String accountName = (String) config.get(AzureConstants.AZURE_STORAGE_ACCOUNT_NAME);
+        final String accountKey = (String) config.get(AzureConstants.AZURE_STORAGE_ACCOUNT_KEY);
+
+        if (StringUtils.isAllBlank(azureConnectionString, clientId, clientSecret, tenantId, accountName, accountKey)) {
+            return null;
+        }
+
+        try (AzureBlobContainerProvider azureBlobContainerProvider = AzureBlobContainerProvider.Builder.builder(containerName)
+                .withAzureConnectionString(azureConnectionString)
+                .withAccountName(accountName)
+                .withClientId(clientId)
+                .withClientSecret(clientSecret)
+                .withTenantId(tenantId)
+                .withAccountKey(accountKey)
+                .build()) {
+            return azureBlobContainerProvider.getBlobContainer();
         }
     }
 }
