@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -96,7 +97,7 @@ public class AzureRepositoryLock implements RepositoryLock {
                 leaseId = blob.acquireLease(leaseDuration, null);
                 writeAccessController.enableWriting();
                 log.info("Acquired lease {}", leaseId);
-            } catch (StorageException | IOException e) {
+            } catch (Exception e) {
                 if (ex == null) {
                     log.info("Can't acquire the lease. Retrying every 1s. Timeout is set to {}s.", timeoutSec);
                 }
@@ -113,7 +114,7 @@ public class AzureRepositoryLock implements RepositoryLock {
             }
         } while (leaseId == null);
         if (leaseId == null) {
-            log.error("Can't acquire the lease in {}s.", timeoutSec);
+            log.error("Can't acquire the lease in {} s.", timeoutSec);
             throw new IOException(ex);
         } else {
             executor.submit(this::refreshLease);
@@ -133,21 +134,32 @@ public class AzureRepositoryLock implements RepositoryLock {
                     requestOptions.setMaximumExecutionTimeInMs(LEASE_RENEWAL_TIMEOUT_MS);
                     requestOptions.setRetryPolicyFactory(new RetryNoRetry());
                     blob.renewLease(AccessCondition.generateLeaseCondition(leaseId), requestOptions, null);
+                    System.out.println(Thread.currentThread().getName());
+                    System.out.println("acquired lease: " + leaseId + " at: " + LocalDateTime.now());
 
                     writeAccessController.enableWriting();
                     lastUpdate = System.currentTimeMillis();
                 }
-            } catch (StorageException e) {
+            } catch (Exception e) {
+                System.out.println("exception occurred " + e.toString());
                 timeSinceLastUpdate = (System.currentTimeMillis() - lastUpdate) / 1000;
 
                 if (timeSinceLastUpdate > timeToWaitBeforeWriteBlock) {
                     writeAccessController.disableWriting();
                 }
 
-                if (Set.of(StorageErrorCodeStrings.OPERATION_TIMED_OUT, StorageErrorCode.SERVICE_INTERNAL_ERROR, StorageErrorCodeStrings.SERVER_BUSY, StorageErrorCodeStrings.INTERNAL_ERROR).contains(e.getErrorCode())) {
-                    log.warn("Could not renew the lease due to the operation timeout or service unavailability. Retry in progress ...", e);
-                } else if (e.getHttpStatusCode() == Constants.HeaderConstants.HTTP_UNUSED_306) {
-                    log.warn("Client side error. Retry in progress ...", e);
+                if (e instanceof StorageException) {
+                    StorageException storageException = (StorageException) e;
+                    if (Set.of(StorageErrorCodeStrings.OPERATION_TIMED_OUT,
+                            StorageErrorCode.SERVICE_INTERNAL_ERROR,
+                            StorageErrorCodeStrings.SERVER_BUSY,
+                            StorageErrorCodeStrings.INTERNAL_ERROR).contains(storageException.getErrorCode())) {
+                        log.warn("Could not renew the lease due to the operation timeout or service unavailability. Retry in progress ...", e);
+                    } else if (storageException.getHttpStatusCode() == Constants.HeaderConstants.HTTP_UNUSED_306) {
+                        log.warn("Client side error. Retry in progress ...", e);
+                    } else {
+                        log.warn("Could not renew lease due to storage exception. Retry in progress ... ", e);
+                    }
                 } else {
                     log.error("Can't renew the lease", e);
                     shutdownHook.run();
@@ -182,7 +194,7 @@ public class AzureRepositoryLock implements RepositoryLock {
             blob.delete();
             log.info("Released lease {}", leaseId);
             leaseId = null;
-        } catch (StorageException e) {
+        } catch (Exception e) {
             throw new IOException(e);
         }
     }

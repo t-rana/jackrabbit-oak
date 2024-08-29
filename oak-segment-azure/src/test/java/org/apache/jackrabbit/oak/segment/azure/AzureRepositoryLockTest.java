@@ -22,7 +22,6 @@ import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
-
 import org.apache.jackrabbit.oak.blob.cloud.azure.blobstorage.AzuriteDockerRule;
 import org.apache.jackrabbit.oak.segment.remote.WriteAccessController;
 import org.apache.jackrabbit.oak.segment.spi.persistence.RepositoryLock;
@@ -41,7 +40,9 @@ import java.security.InvalidKeyException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class AzureRepositoryLockTest {
 
@@ -124,6 +125,27 @@ public class AzureRepositoryLockTest {
         } catch (IOException e) {
             // it's fine
         }
+    }
+
+    @Test
+    public void testRefreshLeaseWithNonStorageException() throws Exception {
+        CloudBlockBlob blob = container.getBlockBlobReference("oak/repo.lock");
+
+        CloudBlockBlob blobMocked = Mockito.spy(blob);
+
+        // instrument the mock to throw the exception twice when renewing the lease
+        RuntimeException runtimeException =
+                new RuntimeException("test-exception");
+        Mockito.doThrow(runtimeException)
+                .when(blobMocked).renewLease(Mockito.any(), Mockito.any(), Mockito.any());
+
+        new AzureRepositoryLock(blobMocked, () -> {}, new WriteAccessController()).lock();
+        // wait for the lease to expire
+        Thread.sleep(16000);
+
+        // reset the mock to default behaviour
+        Mockito.doCallRealMethod().when(blobMocked).renewLease(Mockito.any(), Mockito.any(), Mockito.any());
+        new AzureRepositoryLock(blobMocked, () -> {}, new WriteAccessController()).lock();
     }
 
     @Test
