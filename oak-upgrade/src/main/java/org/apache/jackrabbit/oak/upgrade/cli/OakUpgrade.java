@@ -34,8 +34,23 @@ import org.apache.jackrabbit.oak.upgrade.cli.parser.MigrationCliArguments;
 import org.apache.jackrabbit.oak.upgrade.cli.parser.MigrationOptions;
 import org.apache.jackrabbit.oak.upgrade.cli.parser.OptionParserFactory;
 import org.apache.jackrabbit.oak.upgrade.cli.parser.StoreArguments;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+import javax.jcr.RepositoryException;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.ServiceLoader;
+
+import org.apache.jackrabbit.oak.spi.state.NodeStore;
+import org.apache.jackrabbit.oak.upgrade.UUIDConflictDetector;
+import joptsimple.OptionSet;
+import org.apache.jackrabbit.oak.spi.blob.BlobStore;
 
 public class OakUpgrade {
+    private static final Logger log = LoggerFactory.getLogger(OakUpgrade.class);
 
     public static void main(String... args) throws IOException {
         OptionSet options = OptionParserFactory.create().parse(args);
@@ -45,6 +60,12 @@ public class OakUpgrade {
                 CliUtils.displayUsage();
                 return;
             }
+
+            if (cliArguments.hasOption(OptionParserFactory.CHECK_UUID_CONFLICT)) {
+                checkUUIDConflicts(cliArguments);
+                return;
+            }
+
             migrate(cliArguments);
         } catch(CliArgumentException e) {
             if (e.getMessage() != null) {
@@ -96,6 +117,33 @@ public class OakUpgrade {
         ServiceLoader<RepositoryInitializer> loader = ServiceLoader.load(RepositoryInitializer.class);
         List<RepositoryInitializer> initializers = Lists.newArrayList(loader.iterator());
         return new CompositeInitializer(initializers);
+    }
+
+
+    private static void checkUUIDConflicts(MigrationCliArguments argumentParser) throws CliArgumentException, IOException {
+        MigrationOptions migrationOptions = new MigrationOptions(argumentParser);
+        migrationOptions.logOptions();
+
+        StoreArguments stores = new StoreArguments(migrationOptions, argumentParser.getArguments());
+        stores.logOptions();
+
+        boolean srcEmbedded = stores.srcUsesEmbeddedDatastore();
+        DatastoreArguments datastores = new DatastoreArguments(migrationOptions, stores, srcEmbedded);
+
+        try (Closer closer = Closer.create()) {
+            CliUtils.handleSigInt(closer);
+            BlobStore srcBlobStore = datastores.getSrcBlobStore().create(closer);
+            NodeStore sourceNodeStore = stores.getSrcStore().create(srcBlobStore, closer);
+
+            BlobStore dstBlobStore = datastores.getDstBlobStore(srcBlobStore).create(closer);
+            NodeStore targetNodeStore = stores.getDstStore().create(dstBlobStore, closer);
+
+            UUIDConflictDetector uuidConflictDetector = new UUIDConflictDetector(sourceNodeStore, targetNodeStore, new File("/tmp"));
+            uuidConflictDetector.detectConflicts(migrationOptions.getIncludePaths());
+        } catch (Exception e) {
+            log.error("Error while checking for uuid clashes: ", e);
+            throw e;
+        }
     }
 
 }
