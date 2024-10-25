@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.oak.plugins.index.lucene.directory;
 
 import org.apache.jackrabbit.guava.common.collect.Iterables;
-import org.apache.commons.compress.utils.Lists;
 import org.apache.jackrabbit.oak.InitialContentHelper;
 import org.apache.jackrabbit.oak.commons.concurrent.ExecutorCloser;
 import org.apache.jackrabbit.oak.commons.junit.TemporarySystemProperty;
@@ -69,7 +68,7 @@ public class ConcurrentCopyOnReadDirectoryTest {
 
     private Directory firstCoR = null;
     private List<Future<String>> leechingCoRFutures = new ArrayList<>();
-    private List<Directory> leechingCoRs = Collections.synchronizedList(Lists.newArrayList());
+    private List<Directory> leechingCoRs = Collections.synchronizedList(new ArrayList<>());
 
     private CountDownLatch firstCoRBlocker;
     private Future<String> firstCoRFutre;

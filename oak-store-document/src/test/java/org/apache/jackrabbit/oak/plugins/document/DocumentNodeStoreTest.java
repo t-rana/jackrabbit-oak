@@ -3272,7 +3272,7 @@ public class DocumentNodeStoreTest {
         builder.child("a").child("b").setProperty("p", 0L);
         merge(ns, builder);
 
-        final List<Throwable> exceptions = synchronizedList(Lists.newArrayList());
+        final List<Throwable> exceptions = synchronizedList(new ArrayList<>());
 
         Runnable task = new Runnable() {
 

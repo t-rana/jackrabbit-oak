@@ -46,11 +46,10 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Test;
 
-import org.apache.jackrabbit.guava.common.collect.Lists;
-
 import junit.framework.AssertionFailedError;
 
 public class BackgroundObserverTest {
+
     private static final CommitInfo COMMIT_INFO = new CommitInfo("no-session", null);
     public static final int CHANGE_COUNT = 1024;
 
@@ -113,7 +112,7 @@ public class BackgroundObserverTest {
         return new BackgroundObserver(new Observer() {
             // Need synchronised list here to maintain correct memory barrier
             // when this is passed on to done(List<Runnable>)
-            final List<Runnable> assertions = Collections.synchronizedList(Lists.<Runnable> newArrayList());
+            final List<Runnable> assertions = Collections.synchronizedList(new ArrayList<>());
             volatile NodeState previous;
 
             @Override
