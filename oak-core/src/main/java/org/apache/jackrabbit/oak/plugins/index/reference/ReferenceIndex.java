@@ -45,7 +45,6 @@ import org.apache.jackrabbit.oak.spi.query.Filter.PropertyRestriction;
 import org.apache.jackrabbit.oak.spi.query.QueryIndex;
 import org.apache.jackrabbit.oak.spi.state.NodeState;
 
-import org.apache.jackrabbit.guava.common.collect.ImmutableSet;
 import org.apache.jackrabbit.guava.common.collect.Iterables;
 
 /**
@@ -97,7 +96,7 @@ class ReferenceIndex implements QueryIndex {
         // not an appropriate index
         return POSITIVE_INFINITY;
     }
-    
+
     private static boolean isEqualityRestrictionOnType(PropertyRestriction pr, int propertyType) {
         if (pr.propertyType != propertyType) {
             return false;

@@ -67,7 +67,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.jackrabbit.guava.common.collect.ImmutableSet;
 import org.apache.jackrabbit.guava.common.collect.Iterables;
 
 /**
@@ -135,7 +134,7 @@ public class SelectorImpl extends SourceImpl {
      * flag is set
      */
     private final Set<String> mixinTypes;
-    
+
     /**
      * Whether this selector is the parent of a descendent or parent-child join.
      * Access rights don't need to be checked in such selectors (unless there
@@ -154,7 +153,7 @@ public class SelectorImpl extends SourceImpl {
      * Right outer joins are converted to left outer join.
      */
     private boolean outerJoinRightHandSide;
-    
+
     /**
      * The list of all join conditions this selector is involved. For the query
      * "select * from nt:base as a inner join nt:base as b on a.x =
@@ -174,7 +173,7 @@ public class SelectorImpl extends SourceImpl {
      * These constraints are collected during the prepare phase.
      */
     private final List<ConstraintImpl> selectorConstraints = new ArrayList<>();
-    
+
     private Cursor cursor;
     private IndexRow currentRow;
     private int scanCount;
