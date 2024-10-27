@@ -376,6 +376,177 @@ public class VersionGCSupportTest extends AbstractDocumentStoreTest {
         assertEquals(0, StreamSupport.stream(modifiedDocs.spliterator(), false).count());
     }
 
+    @Test
+    public void getModifiedDocsFromIdWithSameTimestampInMiddleOfRange() {
+        // Insert 5 documents with same timestamp, just in the middle of the query range
+        for (int i = 0; i < 5; i++) {
+            Revision r = new Revision(SECONDS.toMillis(925), 0, 1);
+            String id = getIdFromPath("/test/" + i);
+            ids.add(id);
+            UpdateOp op = new UpdateOp(id, true);
+            setModified(op, r);
+            store.create(NODES, of(op));
+        }
+
+        // Query fromId="/test/2", should return only documents 3 and 4
+        String fromId = getIdFromPath("/test/2");
+        Iterable<NodeDocument> result = gcSupport.getModifiedDocs(
+                SECONDS.toMillis(920), SECONDS.toMillis(930), 10, fromId, EMPTY_STRING_SET, EMPTY_STRING_SET);
+
+        List<NodeDocument> resultList = new ArrayList<>();
+        result.forEach(resultList::add);
+
+        // It should return only 2 documents
+        assertEquals(2, resultList.size()); // Reproduces OAK-11231, as it returns all 5 documents
+        assertEquals(getIdFromPath("/test/3"), resultList.get(0).getId());
+        assertEquals(getIdFromPath("/test/4"), resultList.get(1).getId());
+    }
+
+    @Test
+    public void getModifiedDocsSequentiallyWithLimitSameTimestamp() {
+        // Insert 5 documents with same timestamp
+        for (int i = 0; i < 5; i++) {
+            Revision r = new Revision(SECONDS.toMillis(925), 0, 1);
+            String id = getIdFromPath("/test/" + i);
+            ids.add(id);
+            UpdateOp op = new UpdateOp(id, true);
+            setModified(op, r);
+            store.create(NODES, of(op));
+        }
+
+        // Fetch a maximum of 3 documents from the range 920 to 930. Should return only documents 0 to 2 (inclusive)
+        String fromId1 = MIN_ID_VALUE;
+        Iterable<NodeDocument> result1 = gcSupport.getModifiedDocs(
+                SECONDS.toMillis(920), SECONDS.toMillis(930), 3, fromId1, EMPTY_STRING_SET, EMPTY_STRING_SET);
+
+        List<NodeDocument> resultList1 = new ArrayList<>();
+        result1.forEach(resultList1::add);
+
+        assertEquals(3, resultList1.size());
+        assertEquals(getIdFromPath("/test/0"), resultList1.get(0).getId());
+        assertEquals(getIdFromPath("/test/1"), resultList1.get(1).getId());
+        assertEquals(getIdFromPath("/test/2"), resultList1.get(2).getId());
+
+        // Simulate the next call takes the last processed document as fromId for the next query
+        String fromId2 = resultList1.get(resultList1.size()-1).getId();
+        assertEquals(getIdFromPath("/test/2"), fromId2);
+        Iterable<NodeDocument> result2 = gcSupport.getModifiedDocs(
+                SECONDS.toMillis(920), SECONDS.toMillis(930), 10, fromId2, EMPTY_STRING_SET, EMPTY_STRING_SET);
+
+        List<NodeDocument> resultList2 = new ArrayList<>();
+        result2.forEach(resultList2::add);
+
+        // This should return only the last 2 documents
+        assertEquals(2, resultList2.size()); // Reproduces OAK-11231, as it returns all 5 documents
+        assertEquals(getIdFromPath("/test/3"), resultList2.get(0).getId());
+        assertEquals(getIdFromPath("/test/4"), resultList2.get(1).getId());
+    }
+
+    @Test
+    public void getModifiedDocsFromIdWithSameTimestampBeginningOfQuery() {
+        // Insert 5 documents with same timestamp at the beginning of the query range
+        for (int i = 0; i < 5; i++) {
+            Revision r = new Revision(SECONDS.toMillis(1000), 0, 1);
+            String id = getIdFromPath("/test/" + i);
+            ids.add(id);
+            UpdateOp op = new UpdateOp(id, true);
+            setModified(op, r);
+            store.create(NODES, of(op));
+        }
+
+        // Query with fromId="/test/2", should return only documents 3 and 4
+        String fromId = getIdFromPath("/test/2");
+        Iterable<NodeDocument> result = gcSupport.getModifiedDocs(
+                SECONDS.toMillis(1000), SECONDS.toMillis(1100), 10, fromId, EMPTY_STRING_SET, EMPTY_STRING_SET);
+
+        List<NodeDocument> resultList = new ArrayList<>();
+        result.forEach(resultList::add);
+
+        // It should return only 2 documents
+        assertEquals(2, resultList.size());
+        assertEquals(getIdFromPath("/test/3"), resultList.get(0).getId());
+        assertEquals(getIdFromPath("/test/4"), resultList.get(1).getId());
+    }
+
+    @Test
+    public void getModifiedDocsFromIdWithSameTimestampEndOfQuery() {
+        // Insert 5 documents with same timestamp at the end of the query range
+        for (int i = 0; i < 5; i++) {
+            Revision r = new Revision(1099999L, 0, 1);
+            String id = getIdFromPath("/test/" + i);
+            ids.add(id);
+            UpdateOp op = new UpdateOp(id, true);
+            setModified(op, r);
+            store.create(NODES, of(op));
+        }
+
+        // Query with fromId="/test/2", should return only documents 3 and 4
+        String fromId = getIdFromPath("/test/2");
+        Iterable<NodeDocument> result = gcSupport.getModifiedDocs(
+                SECONDS.toMillis(1000), SECONDS.toMillis(1100), 10, fromId, EMPTY_STRING_SET, EMPTY_STRING_SET);
+
+        List<NodeDocument> resultList = new ArrayList<>();
+        result.forEach(resultList::add);
+
+        // It should return only 2 documents
+        assertEquals(2, resultList.size()); // Reproduces OAK-11231, as it returns all 5 documents
+        assertEquals(getIdFromPath("/test/3"), resultList.get(0).getId());
+        assertEquals(getIdFromPath("/test/4"), resultList.get(1).getId());
+    }
+
+    @Test
+    public void getModifiedDocsFromIdWithDifferentTimestampsAlongQuery() {
+        // Insert 10 documents with timestamps T=998 (id=0) to T=1007 (id=9)
+        // Document with T0 = 1000 and has id="/test/2"
+        for (int i = -2; i <= 7; i++) {
+            String id = getIdFromPath("/test/" + (i+2));
+            ids.add(id);
+            UpdateOp op = new UpdateOp(id, true);
+            op.set(NodeDocument.MODIFIED_IN_SECS, 1000L + i);
+            store.create(NODES, of(op));
+        }
+
+        String fromId1 = MIN_ID_VALUE;
+        Iterable<NodeDocument> result1 = gcSupport.getModifiedDocs(
+                SECONDS.toMillis(1000L), SECONDS.toMillis(1005L), 2, fromId1, EMPTY_STRING_SET, EMPTY_STRING_SET);
+
+        List<NodeDocument> resultList1 = new ArrayList<>();
+        result1.forEach(resultList1::add);
+
+        // It should return only the first 2 documents in the range, with ids 2 and 3
+        assertEquals(2, resultList1.size());
+        assertEquals(getIdFromPath("/test/2"), resultList1.get(0).getId());
+        assertEquals(getIdFromPath("/test/3"), resultList1.get(1).getId());
+
+        // Simulate the next call takes the last processed document as the fromId, which should be the id=3
+        String fromId2 = resultList1.get(resultList1.size()-1).getId();
+        assertEquals(getIdFromPath("/test/3"), fromId2);
+        Iterable<NodeDocument> result2 = gcSupport.getModifiedDocs(
+                SECONDS.toMillis(1000L), SECONDS.toMillis(1005L), 2, fromId2, EMPTY_STRING_SET, EMPTY_STRING_SET);
+
+        List<NodeDocument> resultList2 = new ArrayList<>();
+        result2.forEach(resultList2::add);
+
+        // This should return only the last 2 documents (ids 4 and 5)
+        assertEquals(2, resultList2.size()); // Reproduces OAK-11231, as it returns again id=3
+        assertEquals(getIdFromPath("/test/4"), resultList2.get(0).getId());
+        assertEquals(getIdFromPath("/test/5"), resultList2.get(1).getId());
+
+        // Simulate the next call takes the last processed document as the fromId, which should be id=5
+        String fromId3 = resultList2.get(resultList1.size()-1).getId();
+        assertEquals(getIdFromPath("/test/5"), fromId3);
+        Iterable<NodeDocument> result3 = gcSupport.getModifiedDocs(
+                SECONDS.toMillis(1000L), SECONDS.toMillis(1005L), 2, fromId3, EMPTY_STRING_SET, EMPTY_STRING_SET);
+
+        List<NodeDocument> resultList3 = new ArrayList<>();
+        result3.forEach(resultList3::add);
+
+        // This should return only the last document, with T=1004 (id=6). The rest of documents are T>=1005
+        assertEquals(1, resultList3.size());
+        assertEquals(getIdFromPath("/test/6"), resultList3.get(0).getId());
+        assertEquals((Long)1004L, resultList3.get(0).getModified());
+    }
+
     private void assertPossiblyDeleted(long fromSeconds, long toSeconds, long num) {
         Iterable<NodeDocument> docs = gcSupport.getPossiblyDeletedDocs(SECONDS.toMillis(fromSeconds), SECONDS.toMillis(toSeconds));
         assertEquals(num, StreamSupport.stream(docs.spliterator(), false).count());
