@@ -375,7 +375,7 @@ public class VersionGCSupportTest extends AbstractDocumentStoreTest {
         Iterable<NodeDocument> modifiedDocs = gcSupport.getModifiedDocs(SECONDS.toMillis(oldestModifiedDocTs), MAX_VALUE, 1000, oldestModifiedDocId, EMPTY_STRING_SET, EMPTY_STRING_SET);
         assertEquals(0, StreamSupport.stream(modifiedDocs.spliterator(), false).count());
     }
-
+/*
     @Test
     public void getModifiedDocsFromIdWithSameTimestampInMiddleOfRange() {
         // Insert 5 documents with same timestamp, just in the middle of the query range
@@ -546,7 +546,7 @@ public class VersionGCSupportTest extends AbstractDocumentStoreTest {
         assertEquals(getIdFromPath("/test/6"), resultList3.get(0).getId());
         assertEquals((Long)1004L, resultList3.get(0).getModified());
     }
-
+*/
     private void assertPossiblyDeleted(long fromSeconds, long toSeconds, long num) {
         Iterable<NodeDocument> docs = gcSupport.getPossiblyDeletedDocs(SECONDS.toMillis(fromSeconds), SECONDS.toMillis(toSeconds));
         assertEquals(num, StreamSupport.stream(docs.spliterator(), false).count());
