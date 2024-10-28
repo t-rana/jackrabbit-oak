@@ -255,7 +255,7 @@ public class MongoVersionGCSupport extends VersionGCSupport {
                 withIncludeExcludes(includedPathPrefixes, excludedPathPrefixes,
                         and(eq(MODIFIED_IN_SECS, getModifiedInSecs(fromModified)), gt(ID, fromId))),
                 withIncludeExcludes(includedPathPrefixes, excludedPathPrefixes,
-                        and(gt(MODIFIED_IN_SECS, getModifiedInSecs(fromModified)), lt(MODIFIED_IN_SECS, getModifiedInSecs(toModified)), gt(ID, fromId))));
+                        and(gt(MODIFIED_IN_SECS, getModifiedInSecs(fromModified)), lt(MODIFIED_IN_SECS, getModifiedInSecs(toModified)))));
 
         // first sort by _modified and then by _id
         final Bson sort = ascending(MODIFIED_IN_SECS, ID);

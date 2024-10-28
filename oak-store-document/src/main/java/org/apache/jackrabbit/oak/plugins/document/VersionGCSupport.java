@@ -107,7 +107,7 @@ public class VersionGCSupport {
                 .filter(input -> modifiedEqualsTo(input, fromModified));
 
         final Stream<NodeDocument> s2 = StreamSupport.stream(getSelectedDocuments(store,
-                MODIFIED_IN_SECS, 1, fromId, includePaths, excludePaths).spliterator(), false)
+                MODIFIED_IN_SECS, 1, includePaths, excludePaths).spliterator(), false)
                 .filter(input -> modifiedGreaterThan(input, fromModified) && modifiedLessThan(input, toModified));
 
         return concat(s1, s2)
