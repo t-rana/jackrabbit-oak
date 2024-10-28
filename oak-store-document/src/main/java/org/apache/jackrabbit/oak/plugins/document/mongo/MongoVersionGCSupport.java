@@ -253,9 +253,9 @@ public class MongoVersionGCSupport extends VersionGCSupport {
         // (_modified = fromModified && _id > fromId || _modified > fromModified && _modified < toModified)
         final Bson query = or(
                 withIncludeExcludes(includedPathPrefixes, excludedPathPrefixes,
-                        and(eq(MODIFIED_IN_SECS, getModifiedInSecs(fromModified)), gt(ID, fromId))),
+                        and(eq(MODIFIED_IN_SECS, TimeUnit.MILLISECONDS.toSeconds(fromModified)), gt(ID, fromId))),
                 withIncludeExcludes(includedPathPrefixes, excludedPathPrefixes,
-                        and(gt(MODIFIED_IN_SECS, getModifiedInSecs(fromModified)), lt(MODIFIED_IN_SECS, getModifiedInSecs(toModified)))));
+                        and(gt(MODIFIED_IN_SECS, TimeUnit.MILLISECONDS.toSeconds(fromModified)), lt(MODIFIED_IN_SECS, getModifiedInSecs(toModified)))));
 
         // first sort by _modified and then by _id
         final Bson sort = ascending(MODIFIED_IN_SECS, ID);
