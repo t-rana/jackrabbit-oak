@@ -58,6 +58,7 @@ public class ElasticDocumentMaker extends FulltextDocumentMaker<ElasticDocument>
         // Evaluate path restrictions is enabled by default in elastic. Always index ancestors.
         // When specifically disabled, we will keep indexing it, but the field won't be used at query time
         doc.indexAncestors(path);
+        doc.setLastUpdated(System.currentTimeMillis());
         return doc;
     }
 
@@ -108,7 +109,7 @@ public class ElasticDocumentMaker extends FulltextDocumentMaker<ElasticDocument>
     protected void indexSuggestValue(ElasticDocument doc, String value) {
         if (value != null) {
             String v = value.trim();
-            if (v.length() > 0) {
+            if (!v.isEmpty()) {
                 doc.addSuggest(v);
             }
         }
@@ -118,7 +119,7 @@ public class ElasticDocumentMaker extends FulltextDocumentMaker<ElasticDocument>
     protected void indexSpellcheckValue(ElasticDocument doc, String value) {
         if (value != null) {
             String v = value.trim();
-            if (v.length() > 0) {
+            if (!v.isEmpty()) {
                 doc.addSpellcheck(v);
             }
         }
@@ -128,7 +129,7 @@ public class ElasticDocumentMaker extends FulltextDocumentMaker<ElasticDocument>
     protected void indexFulltextValue(ElasticDocument doc, String value) {
         if (value != null) {
             String v = value.trim();
-            if (v.length() > 0) {
+            if (!v.isEmpty()) {
                 doc.addFulltext(v);
             }
         }
@@ -141,6 +142,19 @@ public class ElasticDocumentMaker extends FulltextDocumentMaker<ElasticDocument>
     @Override
     protected boolean isFulltextValuePersistedAtNode(PropertyDefinition pd) {
         return pd.isRegexp || !pd.analyzed;
+    }
+
+    /**
+     * ElasticDocument can be updated. If a property gets deleted from the node, we need to add it to the list of properties to remove.
+     * This is needed to remove the property from the index. See @{link ElasticBulkProcessorHandler#updateDocument} for more details.
+     */
+    @Override
+    protected boolean addTypedFields(ElasticDocument doc, PropertyState property, String pname, PropertyDefinition pd) {
+        boolean added = super.addTypedFields(doc, property, pname, pd);
+        if (!added) {
+            doc.removeProperty(pname);
+        }
+        return added;
     }
 
     @Override
@@ -209,7 +223,7 @@ public class ElasticDocumentMaker extends FulltextDocumentMaker<ElasticDocument>
     @Override
     protected boolean indexSimilarityTag(ElasticDocument doc, PropertyState property) {
         String val = property.getValue(Type.STRING);
-        if (val.length() > 0) {
+        if (!val.isEmpty()) {
             doc.addSimilarityTag(val);
             return true;
         }
@@ -242,7 +256,7 @@ public class ElasticDocumentMaker extends FulltextDocumentMaker<ElasticDocument>
 
     @Override
     protected boolean indexDynamicBoost(ElasticDocument doc, String parent, String nodeName, String token, double boost) {
-        if (token.length() > 0) {
+        if (!token.isEmpty()) {
             doc.addDynamicBoostField(nodeName, token, boost);
             return true;
         }

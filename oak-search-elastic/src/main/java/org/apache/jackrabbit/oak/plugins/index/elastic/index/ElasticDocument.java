@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.oak.plugins.index.elastic.index;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.codec.digest.MurmurHash3;
@@ -25,10 +26,12 @@ import org.apache.jackrabbit.oak.commons.PathUtils;
 import org.apache.jackrabbit.oak.plugins.index.elastic.ElasticIndexDefinition;
 import org.apache.jackrabbit.oak.plugins.index.search.FieldNames;
 import org.apache.jackrabbit.oak.plugins.index.search.spi.binary.BlobByteSource;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -59,6 +62,12 @@ public class ElasticDocument {
     private final Map<String, Object> properties;
     @JsonProperty(ElasticIndexDefinition.DYNAMIC_PROPERTIES)
     private final List<Map<String, Object>> dynamicProperties;
+    @JsonProperty(ElasticIndexDefinition.LAST_UPDATED)
+    private long lastUpdated;
+
+    // Internal set with properties that need to be removed from the document on update operations
+    @JsonIgnore
+    private final Set<String> propertiesToRemove;
 
     ElasticDocument(String path) {
         this(path, 0);
@@ -75,6 +84,7 @@ public class ElasticDocument {
         this.dynamicProperties = new ArrayList<>();
         this.dbFullText = new LinkedHashSet<>();
         this.similarityTags = new LinkedHashSet<>();
+        this.propertiesToRemove = new HashSet<>();
     }
 
     void addFulltext(String value) {
@@ -168,9 +178,22 @@ public class ElasticDocument {
         similarityTags.add(value);
     }
 
+    void setLastUpdated(long lastUpdated) {
+        this.lastUpdated = lastUpdated;
+    }
+
     @JsonAnyGetter
     public Map<String, Object> getProperties() {
         return properties;
+    }
+
+    public void removeProperty(String fieldName) {
+        propertiesToRemove.add(fieldName);
+    }
+
+    @NotNull
+    public Set<String> getPropertiesToRemove() {
+        return propertiesToRemove;
     }
 
 }

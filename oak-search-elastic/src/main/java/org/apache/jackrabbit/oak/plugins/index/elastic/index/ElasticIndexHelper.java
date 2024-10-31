@@ -18,6 +18,7 @@ package org.apache.jackrabbit.oak.plugins.index.elastic.index;
 
 import static org.apache.jackrabbit.oak.plugins.index.elastic.ElasticPropertyDefinition.DEFAULT_SIMILARITY_METRIC;
 
+import co.elastic.clients.json.JsonData;
 import org.apache.jackrabbit.oak.api.Type;
 import org.apache.jackrabbit.oak.plugins.index.elastic.ElasticIndexDefinition;
 import org.apache.jackrabbit.oak.plugins.index.elastic.ElasticPropertyDefinition;
@@ -91,6 +92,9 @@ class ElasticIndexHelper {
         );
         mapInternalProperties(builder);
         mapIndexRules(builder, indexDefinition);
+        if (indexDefinition.inferenceDefinition != null) {
+            mapInferenceDefinition(builder, indexDefinition.inferenceDefinition);
+        }
         return builder;
     }
 
@@ -128,7 +132,8 @@ class ElasticIndexHelper {
                                                 b3 -> b3.text(b4 -> b4.analyzer("oak_analyzer"))
                                         )
                         )
-                );
+                )
+                .properties(ElasticIndexDefinition.LAST_UPDATED, b -> b.date(d -> d));
         // TODO: the mapping below is for features currently not supported. These need to be reviewed
         // mappingBuilder.startObject(FieldNames.NOT_NULL_PROPS)
         //  .field("type", "keyword")
@@ -136,6 +141,25 @@ class ElasticIndexHelper {
         // mappingBuilder.startObject(FieldNames.NULL_PROPS)
         // .field("type", "keyword")
         // .endObject();
+    }
+
+    private static void mapInferenceDefinition(@NotNull TypeMapping.Builder builder, @NotNull ElasticIndexDefinition.InferenceDefinition inferenceDefinition) {
+        // Store the inference configuration in the index metadata so that it can be used by the inference service
+        builder.meta("inference", JsonData.of(inferenceDefinition));
+
+        if (inferenceDefinition.properties != null) {
+            inferenceDefinition.properties.forEach(p -> builder.properties(p.name,
+                    b -> b.object(bo -> bo
+                            .properties("value", pb -> pb.denseVector(dv ->
+                                            dv.index(true)
+                                                    .dims(p.dims)
+                                                    .similarity(p.similarity)
+                                    )
+                            )
+                            .properties("metadata", pb -> pb.flattened(b1 -> b1))
+                    )
+            ));
+        }
     }
 
     /**
