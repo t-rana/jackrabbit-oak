@@ -149,7 +149,7 @@ public abstract class ElasticAbstractQueryTest extends AbstractQueryTest {
 
         nodeStore = getNodeStore();
 
-        asyncIndexUpdate = getAsyncIndexUpdate("async", nodeStore, compose(newArrayList(
+        asyncIndexUpdate = getAsyncIndexUpdate("async", nodeStore, compose(List.of(
                 editorProvider,
                 new NodeCounterEditorProvider()
         )));
