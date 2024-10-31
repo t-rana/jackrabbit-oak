@@ -36,7 +36,6 @@ import static java.lang.Long.parseLong;
 import static java.util.List.of;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
-import static org.apache.jackrabbit.guava.common.collect.Lists.newArrayList;
 import static org.apache.jackrabbit.oak.plugins.document.Collection.NODES;
 import static org.apache.jackrabbit.oak.plugins.document.NodeDocument.MODIFIED_IN_SECS;
 import static org.apache.jackrabbit.oak.plugins.document.Path.fromString;

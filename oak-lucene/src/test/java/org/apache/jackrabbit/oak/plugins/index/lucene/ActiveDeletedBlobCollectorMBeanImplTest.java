@@ -72,7 +72,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
-import static org.apache.jackrabbit.guava.common.collect.Lists.newArrayList;
+
 import static org.apache.jackrabbit.guava.common.util.concurrent.MoreExecutors.newDirectExecutorService;
 import static org.apache.jackrabbit.oak.api.jmx.IndexStatsMBean.STATUS_DONE;
 import static org.apache.jackrabbit.oak.api.jmx.IndexStatsMBean.STATUS_RUNNING;

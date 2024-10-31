@@ -45,7 +45,6 @@ import javax.jcr.PropertyType;
 import org.apache.jackrabbit.guava.common.collect.ComparisonChain;
 import org.apache.jackrabbit.guava.common.collect.ImmutableList;
 import org.apache.jackrabbit.guava.common.collect.Iterables;
-import org.apache.jackrabbit.guava.common.collect.Lists;
 import org.apache.jackrabbit.guava.common.collect.Maps;
 import org.apache.jackrabbit.guava.common.io.CountingInputStream;
 import org.apache.commons.io.FileUtils;
@@ -106,7 +105,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import static org.apache.jackrabbit.guava.common.collect.Lists.newArrayList;
 import static java.util.Arrays.asList;
 import static org.apache.jackrabbit.JcrConstants.JCR_CONTENT;
 import static org.apache.jackrabbit.JcrConstants.JCR_DATA;

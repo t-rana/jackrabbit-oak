@@ -18,8 +18,6 @@
  */
 package org.apache.jackrabbit.oak.segment;
 
-import static org.apache.jackrabbit.guava.common.collect.Lists.newArrayList;
-
 import static org.apache.jackrabbit.oak.api.Type.BINARY;
 import static org.apache.jackrabbit.oak.api.Type.LONGS;
 import static org.apache.jackrabbit.oak.api.Type.NAME;
