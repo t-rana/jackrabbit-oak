@@ -34,6 +34,7 @@ import org.apache.jackrabbit.guava.common.collect.Sets;
 import org.apache.jackrabbit.guava.common.util.concurrent.MoreExecutors;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.oak.api.Blob;
+import org.apache.jackrabbit.oak.commons.collections.CollectionUtils;
 import org.apache.jackrabbit.oak.plugins.blob.BlobGarbageCollector;
 import org.apache.jackrabbit.oak.plugins.blob.GarbageCollectionRepoStats;
 import org.apache.jackrabbit.oak.plugins.blob.MarkSweepGarbageCollector;
@@ -417,7 +418,7 @@ public class SharedBlobStoreGCTest {
 
         private HashSet<String> addNodeSpecialChars() throws Exception {
             List<String> specialCharSets =
-                Lists.newArrayList("q\\%22afdg\\%22", "a\nbcd", "a\n\rabcd", "012\\efg" );
+                List.of("q\\%22afdg\\%22", "a\nbcd", "a\n\rabcd", "012\\efg" );
             HashSet<String> set = new HashSet<String>();
             NodeBuilder a = ds.getRoot().builder();
             for (int i = 0; i < specialCharSets.size(); i++) {
@@ -427,7 +428,7 @@ public class SharedBlobStoreGCTest {
                 Iterator<String> idIter =
                     ((GarbageCollectableBlobStore) ds.getBlobStore())
                         .resolveChunks(b.toString());
-                set.addAll(Lists.newArrayList(idIter));
+                set.addAll(CollectionUtils.toList(idIter));
             }
             ds.merge(a, EmptyHook.INSTANCE, CommitInfo.EMPTY);
             return set;

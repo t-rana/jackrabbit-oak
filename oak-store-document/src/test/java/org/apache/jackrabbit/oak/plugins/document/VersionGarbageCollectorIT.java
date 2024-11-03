@@ -113,6 +113,7 @@ import org.apache.jackrabbit.oak.InitialContent;
 import org.apache.jackrabbit.oak.api.CommitFailedException;
 import org.apache.jackrabbit.oak.api.PropertyState;
 import org.apache.jackrabbit.oak.api.Type;
+import org.apache.jackrabbit.oak.commons.collections.CollectionUtils;
 import org.apache.jackrabbit.oak.plugins.document.DocumentStoreFixture.RDBFixture;
 import org.apache.jackrabbit.oak.plugins.document.FailingDocumentStore.FailedUpdateOpListener;
 import org.apache.jackrabbit.oak.plugins.document.VersionGarbageCollector.FullGCMode;
@@ -144,6 +145,9 @@ import org.slf4j.LoggerFactory;
 
 @RunWith(Parameterized.class)
 public class VersionGarbageCollectorIT {
+
+    // OAK-10845 : temporary hacky exposure of test store to include its dump in error message
+    static DocumentNodeStore staticStore;
 
     @Rule
     public TestName name = new TestName();
@@ -1509,13 +1513,24 @@ public class VersionGarbageCollectorIT {
         }
         assertNotNull(stats);
         assertNotNull(c);
-        assertEquals(c.mode + "/docGC", c.deletedDocGCCount, stats.deletedDocGCCount);
-        assertEquals(c.mode + "/props", c.deletedPropsCount, stats.deletedPropsCount);
-        assertEquals(c.mode + "/internalProps", c.deletedInternalPropsCount, stats.deletedInternalPropsCount);
-        assertEquals(c.mode + "/propRevs", c.deletedPropRevsCount, stats.deletedPropRevsCount);
-        assertEquals(c.mode + "/internalPropRevs", c.deletedInternalPropRevsCount, stats.deletedInternalPropRevsCount);
-        assertEquals(c.mode + "/unmergedBC", c.deletedUnmergedBCCount, stats.deletedUnmergedBCCount);
-        assertEquals(c.mode + "/updatedFullGCDocsCount", c.updatedFullGCDocsCount, stats.updatedFullGCDocsCount);
+        doAssertEquals(c.mode + "/docGC", c.deletedDocGCCount, stats.deletedDocGCCount);
+        doAssertEquals(c.mode + "/props", c.deletedPropsCount, stats.deletedPropsCount);
+        doAssertEquals(c.mode + "/internalProps", c.deletedInternalPropsCount, stats.deletedInternalPropsCount);
+        doAssertEquals(c.mode + "/propRevs", c.deletedPropRevsCount, stats.deletedPropRevsCount);
+        doAssertEquals(c.mode + "/internalPropRevs", c.deletedInternalPropRevsCount, stats.deletedInternalPropRevsCount);
+        doAssertEquals(c.mode + "/unmergedBC", c.deletedUnmergedBCCount, stats.deletedUnmergedBCCount);
+        doAssertEquals(c.mode + "/updatedFullGCDocsCount", c.updatedFullGCDocsCount, stats.updatedFullGCDocsCount);
+    }
+
+    private static void doAssertEquals(String msg, long expected, long actual) {
+        if (expected != actual) {
+            // then let's expand the error message with a dump of the store
+            // to help debug flaky tests
+            if (staticStore != null) {
+                msg = msg + " - staticStore : " + staticStore.getDocumentStore();
+            }
+        }
+        assertEquals(msg, expected, actual);
     }
 
     @Test
@@ -3548,7 +3563,7 @@ public class VersionGarbageCollectorIT {
         UpdateOp op = new UpdateOp(id, true);
         NodeDocument.setDeletedOnce(op);
         NodeDocument.setModified(op, store1.newRevision());
-        store1.getDocumentStore().create(NODES, Lists.newArrayList(op));
+        store1.getDocumentStore().create(NODES, List.of(op));
 
         clock.waitUntil(clock.getTime() + HOURS.toMillis(maxAge) + delta);
 
@@ -3583,7 +3598,7 @@ public class VersionGarbageCollectorIT {
         assertNotNull(foo);
         Long modCount = foo.getModCount();
         assertNotNull(modCount);
-        List<String> prevIds = Lists.newArrayList(Iterators.transform(
+        List<String> prevIds = CollectionUtils.toList(Iterators.transform(
                 foo.getPreviousDocLeaves(), input -> input.getId()));
 
         // run gc on another document node store

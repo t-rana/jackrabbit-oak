@@ -30,7 +30,6 @@ import static org.apache.jackrabbit.guava.common.base.Preconditions.checkElement
 import static org.apache.jackrabbit.guava.common.base.Preconditions.checkPositionIndex;
 import static org.apache.jackrabbit.guava.common.base.Preconditions.checkPositionIndexes;
 import static org.apache.jackrabbit.guava.common.collect.Iterables.addAll;
-import static org.apache.jackrabbit.guava.common.collect.Lists.newArrayList;
 import static org.apache.jackrabbit.guava.common.io.ByteStreams.read;
 import static org.apache.jackrabbit.oak.api.Type.BINARIES;
 import static org.apache.jackrabbit.oak.api.Type.BINARY;
@@ -480,7 +479,7 @@ public class DefaultSegmentWriter implements SegmentWriter {
             int shift = 32 - (level + 1) * MapRecord.BITS_PER_LEVEL;
 
             List<List<MapEntry>> buckets =
-                    newArrayList(nCopies(MapRecord.BUCKETS_PER_LEVEL, (List<MapEntry>) null));
+                    new ArrayList<>(nCopies(MapRecord.BUCKETS_PER_LEVEL, (List<MapEntry>) null));
             for (MapEntry entry : entries) {
                 int index = (entry.getHash() >> shift) & mask;
                 List<MapEntry> bucket = buckets.get(index);

@@ -19,7 +19,6 @@
 package org.apache.jackrabbit.oak.query.ast;
 
 import static org.apache.jackrabbit.oak.commons.conditions.Validate.checkArgument;
-import static org.apache.jackrabbit.guava.common.collect.Lists.newArrayList;
 import static org.apache.jackrabbit.oak.query.ast.AstElementFactory.copyElementAndCheckReference;
 import static org.apache.jackrabbit.oak.query.ast.Operator.EQUAL;
 
@@ -114,14 +113,14 @@ public class OrImpl extends ConstraintImpl {
                         entry.getKey(), EQUAL, values.iterator().next()));
             } else {
                 simplified.add(new InImpl(
-                        entry.getKey(), newArrayList(values)));
+                        entry.getKey(), new ArrayList<>(values)));
             }
         }
 
         if (simplified.size() == 1) {
             return simplified.iterator().next();
         } else if (changed) {
-            return new OrImpl(newArrayList(simplified));
+            return new OrImpl(new ArrayList<>(simplified));
         } else {
             return this;
         }
@@ -309,7 +308,7 @@ public class OrImpl extends ConstraintImpl {
             }
         }
 
-        InImpl in = new InImpl(operand, newArrayList(values));
+        InImpl in = new InImpl(operand, new ArrayList<>(values));
         in.setQuery(query);
         in.restrictPushDown(s);
     }
