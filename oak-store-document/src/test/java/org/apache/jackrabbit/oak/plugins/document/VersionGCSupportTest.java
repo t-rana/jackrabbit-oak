@@ -397,7 +397,7 @@ public class VersionGCSupportTest extends AbstractDocumentStoreTest {
         result.forEach(resultList::add);
 
         // It should return only 2 documents
-        assertEquals(2, resultList.size()); // Reproduces OAK-11231, as it returns all 5 documents
+        assertEquals(2, resultList.size());
         assertEquals(getIdFromPath("/test/3"), resultList.get(0).getId());
         assertEquals(getIdFromPath("/test/4"), resultList.get(1).getId());
     }
@@ -428,7 +428,7 @@ public class VersionGCSupportTest extends AbstractDocumentStoreTest {
         assertEquals(getIdFromPath("/test/1"), resultList1.get(1).getId());
         assertEquals(getIdFromPath("/test/2"), resultList1.get(2).getId());
 
-        // Let's simulate the next call takes the last processed document as the fromId
+        // Let's simulate the next call takes the last processed document as the fromId and the last timestamp
         String fromId2 = resultList1.get(resultList1.size()-1).getId();
         long fromId2Ts = resultList1.get(resultList1.size()-1).getModified();
         assertEquals(getIdFromPath("/test/2"), fromId2);
@@ -439,7 +439,7 @@ public class VersionGCSupportTest extends AbstractDocumentStoreTest {
         result2.forEach(resultList2::add);
 
         // This should return only the last 2 documents
-        assertEquals(2, resultList2.size()); // Reproduces OAK-11231, as it returns all 5 documents
+        assertEquals(2, resultList2.size());
         assertEquals(getIdFromPath("/test/3"), resultList2.get(0).getId());
         assertEquals(getIdFromPath("/test/4"), resultList2.get(1).getId());
     }
@@ -536,7 +536,7 @@ public class VersionGCSupportTest extends AbstractDocumentStoreTest {
         assertEquals(getIdFromPath("/test/1000/2"), resultList2.get(0).getId());
         assertEquals(getIdFromPath("/test/1001/0"), resultList2.get(1).getId());
 
-        // Let's simulate the next call takes the last processed document as the fromId, which should be id=5
+        // Let's simulate the next call takes the last processed document as the fromId and the last timestamp
         String fromId3 = resultList2.get(resultList1.size()-1).getId();
         long fromId3Ts = resultList2.get(resultList1.size()-1).getModified();
         assertEquals(getIdFromPath("/test/1001/0"), fromId3);
@@ -546,7 +546,7 @@ public class VersionGCSupportTest extends AbstractDocumentStoreTest {
         List<NodeDocument> resultList3 = new ArrayList<>();
         result3.forEach(resultList3::add);
 
-        // This should return only the last document, with T=1004 (id=6). The rest of documents are T>=1005
+        // This should return the next 7 documents with timestamps T=1001, T=1002 and T=1003
         assertEquals(7, resultList3.size());
         assertEquals(getIdFromPath("/test/1001/1"), resultList3.get(0).getId());
         assertEquals(getIdFromPath("/test/1001/2"), resultList3.get(1).getId());
