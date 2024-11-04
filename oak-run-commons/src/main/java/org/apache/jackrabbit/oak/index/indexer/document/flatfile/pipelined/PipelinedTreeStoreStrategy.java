@@ -32,7 +32,6 @@ import org.apache.jackrabbit.oak.index.indexer.document.indexstore.IndexStoreSor
 import org.apache.jackrabbit.oak.index.indexer.document.tree.TreeStore;
 import org.apache.jackrabbit.oak.plugins.document.Collection;
 import org.apache.jackrabbit.oak.plugins.document.DocumentNodeStore;
-import org.apache.jackrabbit.oak.plugins.document.NodeDocument;
 import org.apache.jackrabbit.oak.plugins.document.RevisionVector;
 import org.apache.jackrabbit.oak.plugins.document.mongo.MongoDocumentStore;
 import org.apache.jackrabbit.oak.plugins.index.FormattingUtils;
@@ -42,7 +41,6 @@ import org.apache.jackrabbit.oak.spi.blob.BlobStore;
 import org.apache.jackrabbit.oak.spi.filter.PathFilter;
 import org.apache.jackrabbit.oak.stats.StatisticsProvider;
 import org.bson.RawBsonDocument;
-import org.bson.codecs.Codec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -348,7 +346,7 @@ public class PipelinedTreeStoreStrategy extends IndexStoreSortStrategyBase {
         // to detect this failure.
         @SuppressWarnings("rawtypes")
         ExecutorCompletionService ecs = new ExecutorCompletionService<>(threadPool);
-        Codec<NodeDocument> nodeDocumentCodec = new NodeDocumentCodec(docStore, Collection.NODES, new MongoDocumentFilter("", List.of()), MongoClientSettings.getDefaultCodecRegistry());
+        NodeDocumentCodec nodeDocumentCodec = new NodeDocumentCodec(docStore, Collection.NODES, new MongoDocumentFilter("", List.of()), MongoClientSettings.getDefaultCodecRegistry());
         File resultDir = getStoreDir();
         TreeStore treeStore = new TreeStore("dump", resultDir, null, 1);
         treeStore.getSession().init();

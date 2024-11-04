@@ -61,6 +61,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.apache.jackrabbit.oak.index.indexer.document.flatfile.pipelined.PipelinedMongoDownloadTask.OAK_INDEXER_PIPELINED_MONGO_BATCH_SIZE;
 import static org.apache.jackrabbit.oak.index.indexer.document.flatfile.pipelined.PipelinedMongoDownloadTask.OAK_INDEXER_PIPELINED_MONGO_PARALLEL_DUMP;
@@ -218,8 +219,15 @@ public class PipelinedMongoConnectionFailureIT {
             }
         }
 
-        LOG.info("Comparing resulting FFS with and without Mongo disconnections: {} {}", resultWithoutInterruption, resultWithInterruption);
-        Assert.assertEquals(Files.readAllLines(resultWithoutInterruption), Files.readAllLines(resultWithInterruption));
+        List<String> ffsLinesNoFailure = Files.readAllLines(resultWithoutInterruption);
+        List<String> allLinesWithFailure = Files.readAllLines(resultWithInterruption);
+        if (!ffsLinesNoFailure.equals(allLinesWithFailure)) {
+            List<String> pathsInFFSNoFailures = ffsLinesNoFailure.stream().map(l -> l.substring(0, l.indexOf('|'))).collect(Collectors.toList());
+            List<String> pathsInFFSFailures = allLinesWithFailure.stream().map(l -> l.substring(0, l.indexOf('|'))).collect(Collectors.toList());
+            Assert.fail("Results differ when downloading with no failures and with failures.\n" +
+                    "  No failures  : " + pathsInFFSNoFailures + "\n" +
+                    "  With failures: " + pathsInFFSFailures);
+        }
     }
 
 
@@ -232,7 +240,7 @@ public class PipelinedMongoConnectionFailureIT {
 
     private static void createContent(DocumentNodeStore rwNodeStore) throws CommitFailedException {
         LOG.info("Creating content");
-        var payload = "0123456789".repeat(500); // 5KB per entry. 500KB per tree, 5MB per 10 trees.
+        String payload = "0123456789".repeat(500); // 5KB per entry. 500KB per tree, 5MB per 10 trees.
         Stopwatch start = Stopwatch.createStarted();
         Clock.Virtual clock = rwNodeStore.getClock() instanceof Clock.Virtual ? (Clock.Virtual) rwNodeStore.getClock() : null;
         for (int i = 0; i < N_TREES; i++) {
