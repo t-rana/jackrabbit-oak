@@ -240,6 +240,9 @@ public class ClusterNodeInfo {
     /** OAK-10281 : default millis to delay a recovery after a lease timeout */
     static final long DEFAULT_RECOVERY_DELAY_MILLIS = 0;
 
+    /** OAK-11246 : default millis for perflogger info */
+    static final long DEFAULT_PERFLOGGER_INFO_MILLIS = Long.MAX_VALUE;
+
     /**
      * Actual millis to delay a recovery after a lease timeout.
      * <p>

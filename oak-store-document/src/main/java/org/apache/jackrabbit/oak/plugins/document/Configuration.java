@@ -23,9 +23,8 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.osgi.service.metatype.annotations.Option;
 
-import static org.apache.jackrabbit.oak.plugins.document.ClusterNodeInfo.DEFAULT_RECOVERY_DELAY_MILLIS;
+import static org.apache.jackrabbit.oak.plugins.document.ClusterNodeInfo.*;
 import static org.apache.jackrabbit.oak.plugins.document.CommitQueue.DEFAULT_SUSPEND_TIMEOUT;
-import static org.apache.jackrabbit.oak.plugins.document.ClusterNodeInfo.DEFAULT_REUSE_DELAY_AFTER_RECOVERY_MILLIS;
 import static org.apache.jackrabbit.oak.plugins.document.Configuration.PID;
 import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreBuilder.DEFAULT_CACHE_SEGMENT_COUNT;
 import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreBuilder.DEFAULT_CACHE_STACK_MOVE_DISTANCE;
@@ -319,6 +318,13 @@ import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreServic
                     "0 or negative for no delay. Default: " + DEFAULT_RECOVERY_DELAY_MILLIS +
                     " (milliseconds).")
     long recoveryDelayMillis() default DEFAULT_RECOVERY_DELAY_MILLIS;
+
+    @AttributeDefinition(
+            name = "Perflogger Info Millis",
+            description = "Minimum duration (in milliseconds) for an operation that perflogger info will log. " +
+                    " Default: " + DEFAULT_PERFLOGGER_INFO_MILLIS +
+                    " (milliseconds).")
+    long perfloggerInfoMillis() default 1; //DEFAULT_PERFLOGGER_INFO_MILLIS;
 
     @AttributeDefinition(
             name = "ClusterId reuse delay after recovery",

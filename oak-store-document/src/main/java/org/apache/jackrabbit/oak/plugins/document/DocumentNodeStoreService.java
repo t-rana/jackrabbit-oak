@@ -62,6 +62,7 @@ import org.apache.jackrabbit.oak.api.jmx.CacheStatsMBean;
 import org.apache.jackrabbit.oak.api.jmx.CheckpointMBean;
 import org.apache.jackrabbit.oak.api.jmx.PersistentCacheStatsMBean;
 import org.apache.jackrabbit.oak.cache.CacheStats;
+import org.apache.jackrabbit.oak.commons.PerfLogger;
 import org.apache.jackrabbit.oak.plugins.document.VersionGarbageCollector.VersionGCStats;
 import org.apache.jackrabbit.oak.plugins.document.mongo.MongoDocumentNodeStoreBuilder;
 import org.apache.jackrabbit.oak.plugins.document.mongo.MongoDocumentStore;
@@ -378,6 +379,7 @@ public class DocumentNodeStoreService {
         mkBuilder.setRevisionGCMaxAge(TimeUnit.SECONDS.toMillis(config.versionGcMaxAgeInSecs()));
 
         nodeStore = mkBuilder.build();
+        nodeStore.getPerflog().setInfoLogMillis(config.perfloggerInfoMillis());
 
         // ensure a clusterId is initialized 
         // and expose it as 'oak.clusterid' repository descriptor
@@ -506,6 +508,7 @@ public class DocumentNodeStoreService {
                 setSuspendTimeoutMillis(config.suspendTimeoutMillis()).
                 setClusterIdReuseDelayAfterRecovery(config.clusterIdReuseDelayAfterRecoveryMillis()).
                 setRecoveryDelayMillis(config.recoveryDelayMillis()).
+                setPerfloggerInfoMillis(config.perfloggerInfoMillis()).
                 setLeaseFailureHandler(new LeaseFailureHandler() {
 
                     private final LeaseFailureHandler defaultLeaseFailureHandler = createDefaultLeaseFailureHandler();

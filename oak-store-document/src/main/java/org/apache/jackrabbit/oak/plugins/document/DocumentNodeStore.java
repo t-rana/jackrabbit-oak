@@ -152,7 +152,7 @@ public final class DocumentNodeStore
 
     private static final Logger LOG = LoggerFactory.getLogger(DocumentNodeStore.class);
 
-    private static final PerfLogger PERFLOG = new PerfLogger(
+    static final PerfLogger PERFLOG = new PerfLogger(
             LoggerFactory.getLogger(DocumentNodeStore.class.getName() + ".perf"));
 
     /**
@@ -671,6 +671,8 @@ public final class DocumentNodeStore
                 return 8;
             }
         };
+
+        PERFLOG.setInfoLogMillis(builder.getPerfloggerInfoMillis());
 
         //TODO Make stats collection configurable as it add slight overhead
 
@@ -1315,6 +1317,10 @@ public final class DocumentNodeStore
      */
     JournalEntry getCurrentJournalEntry() {
         return changes;
+    }
+
+    public PerfLogger getPerflog() {
+        return PERFLOG;
     }
 
     void invalidateNodeChildrenCache() {
