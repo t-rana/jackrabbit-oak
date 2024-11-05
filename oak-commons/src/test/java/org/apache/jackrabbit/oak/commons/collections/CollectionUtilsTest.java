@@ -120,6 +120,17 @@ public class CollectionUtilsTest {
     }
 
     @Test
+    public void concurrentHashSet() {
+        // create a set of non-null values
+        final Set<String> s = data.stream().filter(Objects::nonNull).collect(Collectors.toSet());
+
+        Set<String> concurrentHashSet = CollectionUtils.newConcurrentHashSet();
+        concurrentHashSet.addAll(s);
+
+        Assert.assertEquals(s, concurrentHashSet);
+    }
+
+    @Test
     public void toArrayDequeWithNonEmptyIterable() {
         List<String> list = Arrays.asList("one", "two", "three");
         ArrayDeque<String> result = CollectionUtils.toArrayDeque(list);

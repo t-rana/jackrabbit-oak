@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -219,6 +220,20 @@ public class CollectionUtils {
     public static <K> Set<K> newHashSet(final int capacity) {
         // make sure the set does not need to be resized given the initial content
         return new HashSet<>(ensureCapacity(capacity));
+    }
+
+    /**
+     * Creates a new, empty {@link Set} which is backed by {@link ConcurrentHashMap} to allow concurrent access.
+     * Returning Set doesn't allow null keys and values.
+     *
+     * @return a new, empty {@link Set} which is backed by {@link ConcurrentHashMap}.
+     *
+     * @see CollectionUtils#newHashMap(int)
+     * @see CollectionUtils#newLinkedHashSet(int)
+     */
+    @NotNull
+    public static <K> Set<K> newConcurrentHashSet() {
+        return ConcurrentHashMap.newKeySet();
     }
 
     /**
