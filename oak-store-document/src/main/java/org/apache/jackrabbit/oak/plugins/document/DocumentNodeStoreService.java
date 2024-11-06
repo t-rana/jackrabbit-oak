@@ -201,12 +201,6 @@ public class DocumentNodeStoreService {
      */
     private static final String FT_NAME_EMBEDDED_VERIFICATION = "FT_EMBEDDED_VERIFICATION_OAK-10633";
 
-    /**
-     * Feature toggle name to enable the prev-no-prop cache.
-     * prev-no-prop refers to previous document not containing a particular property key.
-     */
-    private static final String FT_NAME_PREV_NO_PROP_CACHE = "FT_PREV_NO_PROP_OAK-11184";
-
     // property name constants - values can come from framework properties or OSGi config
     public static final String CUSTOM_BLOB_STORE = "customBlobStore";
     public static final String PROP_REV_RECOVERY_INTERVAL = "lastRevRecoveryJobIntervalInSecs";
@@ -246,7 +240,6 @@ public class DocumentNodeStoreService {
     private Feature cancelInvalidationFeature;
     private Feature docStoreFullGCFeature;
     private Feature docStoreEmbeddedVerificationFeature;
-    private Feature prevNoPropCacheFeature;
     private ComponentContext context;
     private Whiteboard whiteboard;
     private long deactivationTimestamp = 0;
@@ -285,7 +278,6 @@ public class DocumentNodeStoreService {
         cancelInvalidationFeature = Feature.newFeature(FT_NAME_CANCEL_INVALIDATION, whiteboard);
         docStoreFullGCFeature = Feature.newFeature(FT_NAME_FULL_GC, whiteboard);
         docStoreEmbeddedVerificationFeature = Feature.newFeature(FT_NAME_EMBEDDED_VERIFICATION, whiteboard);
-        prevNoPropCacheFeature = Feature.newFeature(FT_NAME_PREV_NO_PROP_CACHE, whiteboard);
 
         registerNodeStoreIfPossible();
     }
@@ -495,8 +487,7 @@ public class DocumentNodeStoreService {
                         config.nodeCachePercentage(),
                         config.prevDocCachePercentage(),
                         config.childrenCachePercentage(),
-                        config.diffCachePercentage(),
-                        config.prevNoPropCachePercentage()).
+                        config.diffCachePercentage()).
                 setCacheSegmentCount(config.cacheSegmentCount()).
                 setCacheStackMoveDistance(config.cacheStackMoveDistance()).
                 setBundlingDisabled(config.bundlingDisabled()).
@@ -508,7 +499,6 @@ public class DocumentNodeStoreService {
                 setCancelInvalidationFeature(cancelInvalidationFeature).
                 setDocStoreFullGCFeature(docStoreFullGCFeature).
                 setDocStoreEmbeddedVerificationFeature(docStoreEmbeddedVerificationFeature).
-                setPrevNoPropCacheFeature(prevNoPropCacheFeature).
                 setThrottlingEnabled(config.throttlingEnabled()).
                 setFullGCEnabled(config.fullGCEnabled()).
                 setFullGCIncludePaths(config.fullGCIncludePaths()).
@@ -678,10 +668,6 @@ public class DocumentNodeStoreService {
 
         if (docStoreEmbeddedVerificationFeature != null) {
             docStoreEmbeddedVerificationFeature.close();
-        }
-
-        if (prevNoPropCacheFeature != null) {
-            prevNoPropCacheFeature.close();
         }
 
         unregisterNodeStore();
