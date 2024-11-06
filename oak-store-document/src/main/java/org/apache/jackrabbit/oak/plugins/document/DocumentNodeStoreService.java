@@ -22,6 +22,7 @@ import static java.util.Objects.requireNonNull;
 import static org.apache.jackrabbit.guava.common.collect.Lists.newArrayList;
 import static org.apache.jackrabbit.oak.commons.IOUtils.closeQuietly;
 import static org.apache.jackrabbit.oak.commons.PropertiesUtil.toLong;
+import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStore.PERFLOG;
 import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreBuilder.DEFAULT_MEMORY_CACHE_SIZE;
 import static org.apache.jackrabbit.oak.plugins.document.NodeDocument.MODIFIED_IN_SECS_RESOLUTION;
 import static org.apache.jackrabbit.oak.plugins.document.mongo.MongoDocumentNodeStoreBuilder.newMongoDocumentNodeStoreBuilder;
@@ -62,7 +63,6 @@ import org.apache.jackrabbit.oak.api.jmx.CacheStatsMBean;
 import org.apache.jackrabbit.oak.api.jmx.CheckpointMBean;
 import org.apache.jackrabbit.oak.api.jmx.PersistentCacheStatsMBean;
 import org.apache.jackrabbit.oak.cache.CacheStats;
-import org.apache.jackrabbit.oak.commons.PerfLogger;
 import org.apache.jackrabbit.oak.plugins.document.VersionGarbageCollector.VersionGCStats;
 import org.apache.jackrabbit.oak.plugins.document.mongo.MongoDocumentNodeStoreBuilder;
 import org.apache.jackrabbit.oak.plugins.document.mongo.MongoDocumentStore;
@@ -344,6 +344,7 @@ public class DocumentNodeStoreService {
             builder.setLeaseSocketTimeout(config.mongoLeaseSocketTimeout());
             builder.setMongoDB(uri, db, config.blobCacheSize());
             builder.setCollectionCompressionType(config.collectionCompressionType());
+            builder.setPerfloggerInfoMillis(config.perfloggerInfoMillis());
             mkBuilder = builder;
 
             log.info("Connected to database '{}'", db);
@@ -378,8 +379,8 @@ public class DocumentNodeStoreService {
                 newArrayList(gcMonitor, loggingGCMonitor)));
         mkBuilder.setRevisionGCMaxAge(TimeUnit.SECONDS.toMillis(config.versionGcMaxAgeInSecs()));
 
+        PERFLOG.setInfoLogMillis(config.perfloggerInfoMillis());
         nodeStore = mkBuilder.build();
-        nodeStore.getPerflog().setInfoLogMillis(config.perfloggerInfoMillis());
 
         // ensure a clusterId is initialized 
         // and expose it as 'oak.clusterid' repository descriptor

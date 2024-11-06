@@ -23,8 +23,9 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.osgi.service.metatype.annotations.Option;
 
-import static org.apache.jackrabbit.oak.plugins.document.ClusterNodeInfo.*;
+import static org.apache.jackrabbit.oak.plugins.document.ClusterNodeInfo.DEFAULT_RECOVERY_DELAY_MILLIS;
 import static org.apache.jackrabbit.oak.plugins.document.CommitQueue.DEFAULT_SUSPEND_TIMEOUT;
+import static org.apache.jackrabbit.oak.plugins.document.ClusterNodeInfo.DEFAULT_REUSE_DELAY_AFTER_RECOVERY_MILLIS;
 import static org.apache.jackrabbit.oak.plugins.document.Configuration.PID;
 import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreBuilder.DEFAULT_CACHE_SEGMENT_COUNT;
 import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreBuilder.DEFAULT_CACHE_STACK_MOVE_DISTANCE;
@@ -37,6 +38,7 @@ import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreServic
 import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.DEFAULT_EMBEDDED_VERIFICATION_ENABLED;
 import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.DEFAULT_THROTTLING_ENABLED;
 import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.DEFAULT_FULL_GC_MODE;
+import static org.apache.jackrabbit.oak.plugins.document.ClusterNodeInfo.DEFAULT_PERFLOGGER_INFO_MILLIS;
 
 @ObjectClassDefinition(
         pid = {PID},
@@ -324,7 +326,7 @@ import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreServic
             description = "Minimum duration (in milliseconds) for an operation that perflogger info will log. " +
                     " Default: " + DEFAULT_PERFLOGGER_INFO_MILLIS +
                     " (milliseconds).")
-    long perfloggerInfoMillis() default 1; //DEFAULT_PERFLOGGER_INFO_MILLIS;
+    long perfloggerInfoMillis() default DEFAULT_PERFLOGGER_INFO_MILLIS;
 
     @AttributeDefinition(
             name = "ClusterId reuse delay after recovery",

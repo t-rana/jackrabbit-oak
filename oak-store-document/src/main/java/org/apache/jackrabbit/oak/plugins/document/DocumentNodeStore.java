@@ -672,8 +672,6 @@ public final class DocumentNodeStore
             }
         };
 
-        PERFLOG.setInfoLogMillis(builder.getPerfloggerInfoMillis());
-
         //TODO Make stats collection configurable as it add slight overhead
 
         nodeCache = builder.buildNodeCache(this);
@@ -1317,10 +1315,6 @@ public final class DocumentNodeStore
      */
     JournalEntry getCurrentJournalEntry() {
         return changes;
-    }
-
-    public PerfLogger getPerflog() {
-        return PERFLOG;
     }
 
     void invalidateNodeChildrenCache() {
