@@ -38,6 +38,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.IOException;
@@ -108,6 +109,13 @@ public class BranchCommitGCTest {
         VersionGarbageCollectorIT.staticStore = store;
         originalFullGcMode = VersionGarbageCollector.getFullGcMode();
         writeStaticField(VersionGarbageCollector.class, "fullGcMode", fullGcMode, true);
+        // OAK-11254 : adding a temporary sleep to reduce likelyhood of
+        // backgroundPurge to interfere with test
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            fail("got interrupted");
+        }
     }
 
     @After
@@ -751,7 +759,15 @@ public class BranchCommitGCTest {
         if (clusterId > 0) {
             builder.setClusterId(clusterId);
         }
-        return builder.getNodeStore();
+        DocumentNodeStore nodeStore = builder.getNodeStore();
+        // OAK-11254 : adding a temporary sleep to reduce likelyhood of
+        // backgroundPurge to interfere with test
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            fail("got interrupted");
+        }
+        return nodeStore;
     }
 
     private RevisionVector mergedBranchCommit(Consumer<NodeBuilder> buildFunction) throws Exception {

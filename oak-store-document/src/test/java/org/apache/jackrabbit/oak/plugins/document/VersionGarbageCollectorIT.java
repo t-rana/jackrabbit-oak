@@ -317,6 +317,13 @@ public class VersionGarbageCollectorIT {
                 .setLeaseCheckMode(LeaseCheckMode.DISABLED)
                 .setDocumentStore(ds1).setAsyncDelay(0);
         store1 = documentMKBuilder.getNodeStore();
+        // OAK-11254 : adding a temporary sleep to reduce likelyhood of
+        // backgroundPurge to interfere with test
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            fail("got interrupted");
+        }
     }
 
     private void createSecondaryStore(LeaseCheckMode leaseCheckNode)
@@ -347,6 +354,13 @@ public class VersionGarbageCollectorIT {
         // custom fullGcMode needs to be set after each node store creation, since the VersionGarbageCollector
         // constructor sets the fullGcMode to the value read from OSGI Configuration - method setFullGcMode
         writeStaticField(VersionGarbageCollector.class, "fullGcMode", fullGcMode, true);
+        // OAK-11254 : adding a temporary sleep to reduce likelyhood of
+        // backgroundPurge to interfere with test
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            fail("got interrupted");
+        }
     }
 
     private static final Set<Thread> tbefore = new HashSet<>();
@@ -988,6 +1002,13 @@ public class VersionGarbageCollectorIT {
         };
         store1 = new DocumentMK.Builder().clock(clock).setLeaseCheckMode(LeaseCheckMode.DISABLED)
                 .setDocumentStore(fds).setAsyncDelay(0).getNodeStore();
+        // OAK-11254 : adding a temporary sleep to reduce likelyhood of
+        // backgroundPurge to interfere with test
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            fail("got interrupted");
+        }
 
         assertTrue(store1.getDocumentStore() instanceof FailingDocumentStore);
 
@@ -1032,6 +1053,13 @@ public class VersionGarbageCollectorIT {
         store1 = new DocumentMK.Builder().clock(clock).setLeaseCheckMode(LeaseCheckMode.DISABLED)
                 .setDocumentStore(fds).setAsyncDelay(0)
                 .getNodeStore();
+        // OAK-11254 : adding a temporary sleep to reduce likelyhood of
+        // backgroundPurge to interfere with test
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            fail("got interrupted");
+        }
         assertTrue(store1.getDocumentStore() instanceof FailingDocumentStore);
         MongoTestUtils.setReadPreference(store1, ReadPreference.primary());
         gc = store1.getVersionGarbageCollector();
