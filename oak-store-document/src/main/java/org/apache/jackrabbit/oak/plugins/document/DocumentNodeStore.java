@@ -102,7 +102,6 @@ import org.apache.jackrabbit.oak.plugins.document.prefetch.CacheWarming;
 import org.apache.jackrabbit.oak.plugins.document.util.LeaseCheckDocumentStoreWrapper;
 import org.apache.jackrabbit.oak.plugins.document.util.LoggingDocumentStoreWrapper;
 import org.apache.jackrabbit.oak.plugins.document.util.ReadOnlyDocumentStoreWrapperFactory;
-import org.apache.jackrabbit.oak.plugins.document.util.StringValue;
 import org.apache.jackrabbit.oak.plugins.document.util.ThrottlingDocumentStoreWrapper;
 import org.apache.jackrabbit.oak.plugins.document.util.TimingDocumentStoreWrapper;
 import org.apache.jackrabbit.oak.plugins.document.util.Utils;
@@ -441,12 +440,6 @@ public final class DocumentNodeStore
     private final DiffCache diffCache;
 
     /**
-     * Tiny cache for non existence of any revisions in previous documents
-     * for particular properties.
-     */
-    private final Cache<StringValue, StringValue> prevNoPropCache;
-
-    /**
      * The commit value resolver for this node store.
      */
     private final CommitValueResolver commitValueResolver;
@@ -690,9 +683,6 @@ public final class DocumentNodeStore
 
         diffCache = builder.getDiffCache(this.clusterId);
 
-        // builder checks for feature toggle directly and returns null if disabled
-        prevNoPropCache = builder.buildPrevNoPropCache();
-
         // check if root node exists
         NodeDocument rootDoc = store.find(NODES, Utils.getIdFromPath(ROOT));
         if (rootDoc == null) {
@@ -870,13 +860,6 @@ public final class DocumentNodeStore
         LOG.info("Initialized DocumentNodeStore with clusterNodeId: {}, updateLimit: {} ({})",
                 clusterId, updateLimit,
                 getClusterNodeInfoDisplayString());
-        if (prevNoPropCache == null) {
-            LOG.info("prevNoProp cache is disabled");
-        } else {
-            // unfortunate that the guava cache doesn't unveil its max size
-            // hence falling back to using the builder's original value for now.
-            LOG.info("prevNoProp cache is enabled with size: " + builder.getPrevNoPropCacheSize());
-        }
 
         if (!builder.isBundlingDisabled()) {
             bundlingConfigHandler.initialize(this, executor);
@@ -1321,10 +1304,6 @@ public final class DocumentNodeStore
 
     public Predicate<Path> getNodeCachePredicate() {
         return nodeCachePredicate;
-    }
-
-    public Cache<StringValue, StringValue> getPrevNoPropCache() {
-        return prevNoPropCache;
     }
 
     /**

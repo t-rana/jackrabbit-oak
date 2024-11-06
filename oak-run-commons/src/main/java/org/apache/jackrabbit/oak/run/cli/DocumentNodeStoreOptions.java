@@ -34,7 +34,6 @@ public class DocumentNodeStoreOptions implements OptionsBean {
     private final OptionSpec<Integer> prevDocCachePercentage;
     private final OptionSpec<Integer> childrenCachePercentage;
     private final OptionSpec<Integer> diffCachePercentage;
-    private final OptionSpec<Integer> prevNoPropCachePercentage;
     private OptionSet options;
 
     public DocumentNodeStoreOptions(OptionParser parser){
@@ -57,9 +56,6 @@ public class DocumentNodeStoreOptions implements OptionsBean {
         diffCachePercentage = parser.
                 accepts("diffCachePercentage", "Percentage of cache to be allocated towards Diff cache")
                 .withRequiredArg().ofType(Integer.class).defaultsTo(30);
-        prevNoPropCachePercentage = parser.
-                accepts("prevNoPropCachePercentage", "Percentage of cache to be allocated towards PrevNoProp cache")
-                .withRequiredArg().ofType(Integer.class).defaultsTo(1);
     }
 
     @Override
@@ -114,10 +110,6 @@ public class DocumentNodeStoreOptions implements OptionsBean {
 
     public int getDiffCachePercentage() {
         return diffCachePercentage.value(options);
-    }
-
-    public int getPrevNoPropCachePercentage() {
-        return prevNoPropCachePercentage.value(options);
     }
 
     public boolean isCacheDistributionDefined(){
