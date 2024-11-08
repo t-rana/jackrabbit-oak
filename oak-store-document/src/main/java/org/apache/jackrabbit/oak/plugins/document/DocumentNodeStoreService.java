@@ -380,6 +380,9 @@ public class DocumentNodeStoreService {
         mkBuilder.setRevisionGCMaxAge(TimeUnit.SECONDS.toMillis(config.versionGcMaxAgeInSecs()));
 
         PERFLOG.setInfoLogMillis(config.perfloggerInfoMillis());
+        DocumentNodeStoreBranch.configurePerfLogger(config.perfloggerInfoMillis());
+        AbstractDocumentNodeState.configurePerfLogger(config.perfloggerInfoMillis());
+
         nodeStore = mkBuilder.build();
 
         // ensure a clusterId is initialized 

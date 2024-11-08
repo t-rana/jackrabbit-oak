@@ -860,4 +860,8 @@ class DocumentNodeStoreBranch implements NodeStoreBranch {
             throw ex;
         }
     }
+
+    static void configurePerfLogger(long infoLogMillis) {
+        perfLogger.setInfoLogMillis(infoLogMillis);
+    }
 }

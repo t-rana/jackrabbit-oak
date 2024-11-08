@@ -162,4 +162,8 @@ public abstract class AbstractDocumentNodeState extends AbstractNodeState {
         return this.getLastRevision() != null
                 && this.getLastRevision().equals(other.getLastRevision());
     }
+
+    static void configurePerfLogger(long infoLogMillis) {
+        perfLogger.setInfoLogMillis(infoLogMillis);
+    }
 }
