@@ -326,7 +326,7 @@ import static org.apache.jackrabbit.oak.plugins.document.ClusterNodeInfo.DEFAULT
             description = "Minimum duration (in milliseconds) for an operation that perflogger info will log. " +
                     " Default: " + DEFAULT_PERFLOGGER_INFO_MILLIS +
                     " (milliseconds).")
-    long perfloggerInfoMillis() default DEFAULT_PERFLOGGER_INFO_MILLIS;
+    long perfLoggerInfoMillis() default DEFAULT_PERFLOGGER_INFO_MILLIS;
 
     @AttributeDefinition(
             name = "ClusterId reuse delay after recovery",
