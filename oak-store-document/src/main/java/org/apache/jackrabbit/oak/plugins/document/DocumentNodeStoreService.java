@@ -344,7 +344,7 @@ public class DocumentNodeStoreService {
             builder.setLeaseSocketTimeout(config.mongoLeaseSocketTimeout());
             builder.setMongoDB(uri, db, config.blobCacheSize());
             builder.setCollectionCompressionType(config.collectionCompressionType());
-            builder.setPerfloggerInfoMillis(config.perfloggerInfoMillis());
+            builder.setPerfloggerInfoMillis(config.perfLoggerInfoMillis());
             mkBuilder = builder;
 
             log.info("Connected to database '{}'", db);
@@ -379,9 +379,9 @@ public class DocumentNodeStoreService {
                 newArrayList(gcMonitor, loggingGCMonitor)));
         mkBuilder.setRevisionGCMaxAge(TimeUnit.SECONDS.toMillis(config.versionGcMaxAgeInSecs()));
 
-        PERFLOG.setInfoLogMillis(config.perfloggerInfoMillis());
-        DocumentNodeStoreBranch.configurePerfLogger(config.perfloggerInfoMillis());
-        AbstractDocumentNodeState.configurePerfLogger(config.perfloggerInfoMillis());
+        PERFLOG.setInfoLogMillis(config.perfLoggerInfoMillis());
+        DocumentNodeStoreBranch.configurePerfLogger(config.perfLoggerInfoMillis());
+        AbstractDocumentNodeState.configurePerfLogger(config.perfLoggerInfoMillis());
 
         nodeStore = mkBuilder.build();
 
@@ -512,7 +512,7 @@ public class DocumentNodeStoreService {
                 setSuspendTimeoutMillis(config.suspendTimeoutMillis()).
                 setClusterIdReuseDelayAfterRecovery(config.clusterIdReuseDelayAfterRecoveryMillis()).
                 setRecoveryDelayMillis(config.recoveryDelayMillis()).
-                setPerfloggerInfoMillis(config.perfloggerInfoMillis()).
+                setPerfloggerInfoMillis(config.perfLoggerInfoMillis()).
                 setLeaseFailureHandler(new LeaseFailureHandler() {
 
                     private final LeaseFailureHandler defaultLeaseFailureHandler = createDefaultLeaseFailureHandler();
