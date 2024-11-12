@@ -16,12 +16,10 @@
  */
 package org.apache.jackrabbit.oak.plugins.document;
 
-import static org.apache.jackrabbit.guava.common.base.Preconditions.checkArgument;
+import static org.apache.jackrabbit.oak.commons.conditions.Validate.checkArgument;
 import static java.util.Objects.requireNonNull;
-import static org.apache.jackrabbit.guava.common.base.Preconditions.checkState;
 import static org.apache.jackrabbit.guava.common.collect.Iterables.partition;
 import static org.apache.jackrabbit.guava.common.collect.Iterables.transform;
-import static org.apache.jackrabbit.guava.common.collect.Lists.newArrayList;
 import static org.apache.jackrabbit.guava.common.collect.Lists.reverse;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.nonNull;
@@ -84,6 +82,7 @@ import org.apache.jackrabbit.oak.api.PropertyState;
 import org.apache.jackrabbit.oak.cache.CacheStats;
 import org.apache.jackrabbit.oak.commons.PerfLogger;
 import org.apache.jackrabbit.oak.commons.collections.CollectionUtils;
+import org.apache.jackrabbit.oak.commons.conditions.Validate;
 import org.apache.jackrabbit.oak.commons.json.JsopStream;
 import org.apache.jackrabbit.oak.commons.json.JsopWriter;
 import org.apache.jackrabbit.oak.commons.properties.SystemPropertySupplier;
@@ -103,6 +102,7 @@ import org.apache.jackrabbit.oak.plugins.document.prefetch.CacheWarming;
 import org.apache.jackrabbit.oak.plugins.document.util.LeaseCheckDocumentStoreWrapper;
 import org.apache.jackrabbit.oak.plugins.document.util.LoggingDocumentStoreWrapper;
 import org.apache.jackrabbit.oak.plugins.document.util.ReadOnlyDocumentStoreWrapperFactory;
+import org.apache.jackrabbit.oak.plugins.document.util.StringValue;
 import org.apache.jackrabbit.oak.plugins.document.util.ThrottlingDocumentStoreWrapper;
 import org.apache.jackrabbit.oak.plugins.document.util.TimingDocumentStoreWrapper;
 import org.apache.jackrabbit.oak.plugins.document.util.Utils;
@@ -140,7 +140,6 @@ import org.apache.jackrabbit.guava.common.base.Suppliers;
 import org.apache.jackrabbit.guava.common.collect.ImmutableList;
 import org.apache.jackrabbit.guava.common.collect.ImmutableMap;
 import org.apache.jackrabbit.guava.common.collect.Iterables;
-import org.apache.jackrabbit.guava.common.collect.Lists;
 import org.apache.jackrabbit.guava.common.collect.Maps;
 import org.apache.jackrabbit.guava.common.collect.Sets;
 
@@ -442,6 +441,12 @@ public final class DocumentNodeStore
     private final DiffCache diffCache;
 
     /**
+     * Tiny cache for non existence of any revisions in previous documents
+     * for particular properties.
+     */
+    private final Cache<StringValue, StringValue> prevNoPropCache;
+
+    /**
      * The commit value resolver for this node store.
      */
     private final CommitValueResolver commitValueResolver;
@@ -653,7 +658,8 @@ public final class DocumentNodeStore
         this.asyncDelay = builder.getAsyncDelay();
         this.versionGarbageCollector = new VersionGarbageCollector(
                 this, builder.createVersionGCSupport(), isFullGCEnabled(builder), false,
-                isEmbeddedVerificationEnabled(builder), builder.getFullGCMode());
+                isEmbeddedVerificationEnabled(builder), builder.getFullGCMode(), builder.getFullGCDelayFactor(),
+                builder.getFullGCBatchSize(), builder.getFullGCProgressSize());
         this.versionGarbageCollector.setStatisticsProvider(builder.getStatisticsProvider());
         this.versionGarbageCollector.setGCMonitor(builder.getGCMonitor());
         this.versionGarbageCollector.setFullGCPaths(builder.getFullGCIncludePaths(), builder.getFullGCExcludePaths());
@@ -683,6 +689,9 @@ public final class DocumentNodeStore
                 builder.getWeigher(), builder.getChildrenCacheSize());
 
         diffCache = builder.getDiffCache(this.clusterId);
+
+        // builder checks for feature toggle directly and returns null if disabled
+        prevNoPropCache = builder.buildPrevNoPropCache();
 
         // check if root node exists
         NodeDocument rootDoc = store.find(NODES, Utils.getIdFromPath(ROOT));
@@ -861,6 +870,13 @@ public final class DocumentNodeStore
         LOG.info("Initialized DocumentNodeStore with clusterNodeId: {}, updateLimit: {} ({})",
                 clusterId, updateLimit,
                 getClusterNodeInfoDisplayString());
+        if (prevNoPropCache == null) {
+            LOG.info("prevNoProp cache is disabled");
+        } else {
+            // unfortunate that the guava cache doesn't unveil its max size
+            // hence falling back to using the builder's original value for now.
+            LOG.info("prevNoProp cache is enabled with size: " + builder.getPrevNoPropCacheSize());
+        }
 
         if (!builder.isBundlingDisabled()) {
             bundlingConfigHandler.initialize(this, executor);
@@ -1305,6 +1321,10 @@ public final class DocumentNodeStore
 
     public Predicate<Path> getNodeCachePredicate() {
         return nodeCachePredicate;
+    }
+
+    public Cache<StringValue, StringValue> getPrevNoPropCache() {
+        return prevNoPropCache;
     }
 
     /**
@@ -2951,7 +2971,7 @@ public final class DocumentNodeStore
                     setRoot(newHead);
                     commitQueue.headRevisionChanged();
 
-                    store.createOrUpdate(NODES, Lists.newArrayList(updates.values()));
+                    store.createOrUpdate(NODES, new ArrayList<>(updates.values()));
                     numUpdates.addAndGet(updates.size());
                     LOG.debug("Background sweep2 updated {}", updates.keySet());
                 }
@@ -3073,7 +3093,7 @@ public final class DocumentNodeStore
                     setRoot(newHead);
                     commitQueue.headRevisionChanged();
 
-                    store.createOrUpdate(NODES, Lists.newArrayList(updates.values()));
+                    store.createOrUpdate(NODES, new ArrayList<>(updates.values()));
                     numUpdates.addAndGet(updates.size());
                     LOG.debug("Background sweep updated {}", updates.keySet());
                 }
@@ -3239,7 +3259,7 @@ public final class DocumentNodeStore
      * @param rootDoc the current root document.
      */
     private void initializeRootState(NodeDocument rootDoc) {
-        checkState(root == null);
+        Validate.checkState(root == null);
 
         try {
             alignWithExternalRevisions(rootDoc, clock, clusterId, maxTimeDiffMillis);
@@ -3492,7 +3512,7 @@ public final class DocumentNodeStore
         LOG.debug("diffManyChildren: path: {}, fromRev: {}, toRev: {}", path, fromRev, toRev);
 
         for (NodeDocument doc : store.query(Collection.NODES, fromKey, toKey,
-                NodeDocument.MODIFIED_IN_SECS, minValue, Integer.MAX_VALUE, newArrayList(PATH))) {
+                NodeDocument.MODIFIED_IN_SECS, minValue, Integer.MAX_VALUE, List.of(PATH))) {
             paths.add(doc.getPath());
         }
 
