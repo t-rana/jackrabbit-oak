@@ -152,7 +152,7 @@ public final class DocumentNodeStore
 
     private static final Logger LOG = LoggerFactory.getLogger(DocumentNodeStore.class);
 
-    static final PerfLogger PERFLOG = new PerfLogger(
+    private static final PerfLogger PERFLOG = new PerfLogger(
             LoggerFactory.getLogger(DocumentNodeStore.class.getName() + ".perf"));
 
     /**
@@ -4057,5 +4057,14 @@ public final class DocumentNodeStore
         // feature can be enabled with system property or feature toggle
         return prefetchEnabled
                 || (prefetchFeature != null && prefetchFeature.isEnabled());
+    }
+
+    /**
+     * Configures the performance logger with the specified info log interval.
+     *
+     * @param infoLogMillis the interval in milliseconds for logging performance information.
+     */
+    static void configurePerfLogger(long infoLogMillis) {
+        PERFLOG.setInfoLogMillis(infoLogMillis);
     }
 }

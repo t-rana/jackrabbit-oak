@@ -22,7 +22,6 @@ import static java.util.Objects.requireNonNull;
 import static org.apache.jackrabbit.guava.common.collect.Lists.newArrayList;
 import static org.apache.jackrabbit.oak.commons.IOUtils.closeQuietly;
 import static org.apache.jackrabbit.oak.commons.PropertiesUtil.toLong;
-import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStore.PERFLOG;
 import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreBuilder.DEFAULT_MEMORY_CACHE_SIZE;
 import static org.apache.jackrabbit.oak.plugins.document.NodeDocument.MODIFIED_IN_SECS_RESOLUTION;
 import static org.apache.jackrabbit.oak.plugins.document.mongo.MongoDocumentNodeStoreBuilder.newMongoDocumentNodeStoreBuilder;
@@ -200,6 +199,9 @@ public class DocumentNodeStoreService {
      */
     private static final String FT_NAME_EMBEDDED_VERIFICATION = "FT_EMBEDDED_VERIFICATION_OAK-10633";
 
+    /** OAK-11246 : default millis for perflogger info */
+    static final long DEFAULT_PERFLOGGER_INFO_MILLIS = Long.MAX_VALUE;
+
     // property name constants - values can come from framework properties or OSGi config
     public static final String CUSTOM_BLOB_STORE = "customBlobStore";
     public static final String PROP_REV_RECOVERY_INTERVAL = "lastRevRecoveryJobIntervalInSecs";
@@ -344,7 +346,6 @@ public class DocumentNodeStoreService {
             builder.setLeaseSocketTimeout(config.mongoLeaseSocketTimeout());
             builder.setMongoDB(uri, db, config.blobCacheSize());
             builder.setCollectionCompressionType(config.collectionCompressionType());
-            builder.setPerfloggerInfoMillis(config.perfLoggerInfoMillis());
             mkBuilder = builder;
 
             log.info("Connected to database '{}'", db);
@@ -379,7 +380,7 @@ public class DocumentNodeStoreService {
                 newArrayList(gcMonitor, loggingGCMonitor)));
         mkBuilder.setRevisionGCMaxAge(TimeUnit.SECONDS.toMillis(config.versionGcMaxAgeInSecs()));
 
-        PERFLOG.setInfoLogMillis(config.perfLoggerInfoMillis());
+        DocumentNodeStore.configurePerfLogger(config.perfLoggerInfoMillis());
         DocumentNodeStoreBranch.configurePerfLogger(config.perfLoggerInfoMillis());
         AbstractDocumentNodeState.configurePerfLogger(config.perfLoggerInfoMillis());
 

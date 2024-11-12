@@ -36,9 +36,9 @@ import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreBuilde
 import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreBuilder.DEFAULT_UPDATE_LIMIT;
 import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.DEFAULT_FULL_GC_ENABLED;
 import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.DEFAULT_EMBEDDED_VERIFICATION_ENABLED;
+import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.DEFAULT_PERFLOGGER_INFO_MILLIS;
 import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.DEFAULT_THROTTLING_ENABLED;
 import static org.apache.jackrabbit.oak.plugins.document.DocumentNodeStoreService.DEFAULT_FULL_GC_MODE;
-import static org.apache.jackrabbit.oak.plugins.document.ClusterNodeInfo.DEFAULT_PERFLOGGER_INFO_MILLIS;
 
 @ObjectClassDefinition(
         pid = {PID},
@@ -323,7 +323,7 @@ import static org.apache.jackrabbit.oak.plugins.document.ClusterNodeInfo.DEFAULT
 
     @AttributeDefinition(
             name = "Perflogger Info Millis",
-            description = "Minimum duration (in milliseconds) for an operation that perflogger info will log. " +
+            description = "Minimum duration (in milliseconds) for certain operations that perflogger info will log. " +
                     " Default: " + DEFAULT_PERFLOGGER_INFO_MILLIS +
                     " (milliseconds).")
     long perfLoggerInfoMillis() default DEFAULT_PERFLOGGER_INFO_MILLIS;

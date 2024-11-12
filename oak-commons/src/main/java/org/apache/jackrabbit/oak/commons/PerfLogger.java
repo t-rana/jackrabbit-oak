@@ -50,7 +50,7 @@ public final class PerfLogger {
     /** The logger to which the log statements are emitted **/
     private final Logger delegate;
 
-    private long infoLogMillis;
+    private long infoLogMillis = Long.MAX_VALUE;
 
     /** Create a new PerfLogger that shall use the given Logger object for logging **/
     public PerfLogger(Logger delegate) {

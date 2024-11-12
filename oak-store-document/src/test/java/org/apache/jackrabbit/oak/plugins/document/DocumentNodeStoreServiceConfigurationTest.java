@@ -241,9 +241,13 @@ public class DocumentNodeStoreServiceConfigurationTest {
 
     @Test
     public void perfLoggerInfoMillisTest() throws Exception {
-        addConfigurationEntry(preset, "perfLoggerInfoMillis", 0L);
+        addConfigurationEntry(preset, "perfLoggerInfoMillis", Long.MAX_VALUE);
         Configuration config = createConfiguration();
-        assertEquals(0L, config.perfLoggerInfoMillis());
+        assertEquals(Long.MAX_VALUE, config.perfLoggerInfoMillis());
+
+        addConfigurationEntry(preset, "perfLoggerInfoMillis", 0L);
+        config = createConfiguration();
+        assertEquals( 0L, config.perfLoggerInfoMillis());
 
         addConfigurationEntry(preset, "perfLoggerInfoMillis", 100000L);
         config = createConfiguration();
