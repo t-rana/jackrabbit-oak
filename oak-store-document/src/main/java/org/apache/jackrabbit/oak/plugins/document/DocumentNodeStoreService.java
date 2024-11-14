@@ -201,6 +201,9 @@ public class DocumentNodeStoreService {
      */
     private static final String FT_NAME_EMBEDDED_VERIFICATION = "FT_EMBEDDED_VERIFICATION_OAK-10633";
 
+    /** OAK-11246 : default millis for perflogger info */
+    static final long DEFAULT_PERFLOGGER_INFO_MILLIS = Long.MAX_VALUE;
+  
     /**
      * Feature toggle name to enable the prev-no-prop cache.
      * prev-no-prop refers to previous document not containing a particular property key.
@@ -387,6 +390,10 @@ public class DocumentNodeStoreService {
                 List.of(gcMonitor, loggingGCMonitor)));
         mkBuilder.setRevisionGCMaxAge(TimeUnit.SECONDS.toMillis(config.versionGcMaxAgeInSecs()));
 
+        DocumentNodeStore.configurePerfLogger(config.perfLoggerInfoMillis());
+        DocumentNodeStoreBranch.configurePerfLogger(config.perfLoggerInfoMillis());
+        AbstractDocumentNodeState.configurePerfLogger(config.perfLoggerInfoMillis());
+
         nodeStore = mkBuilder.build();
 
         // ensure a clusterId is initialized 
@@ -521,6 +528,7 @@ public class DocumentNodeStoreService {
                 setSuspendTimeoutMillis(config.suspendTimeoutMillis()).
                 setClusterIdReuseDelayAfterRecovery(config.clusterIdReuseDelayAfterRecoveryMillis()).
                 setRecoveryDelayMillis(config.recoveryDelayMillis()).
+                setPerfloggerInfoMillis(config.perfLoggerInfoMillis()).
                 setLeaseFailureHandler(new LeaseFailureHandler() {
 
                     private final LeaseFailureHandler defaultLeaseFailureHandler = createDefaultLeaseFailureHandler();

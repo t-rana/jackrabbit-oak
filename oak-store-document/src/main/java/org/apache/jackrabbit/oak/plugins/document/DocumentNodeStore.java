@@ -4078,4 +4078,13 @@ public final class DocumentNodeStore
         return prefetchEnabled
                 || (prefetchFeature != null && prefetchFeature.isEnabled());
     }
+
+    /**
+     * Configures the performance logger with the specified info log interval.
+     *
+     * @param infoLogMillis the interval in milliseconds for logging performance information.
+     */
+    static void configurePerfLogger(long infoLogMillis) {
+        PERFLOG.setInfoLogMillis(infoLogMillis);
+    }
 }
