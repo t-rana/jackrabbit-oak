@@ -141,7 +141,6 @@ import org.apache.jackrabbit.guava.common.collect.ImmutableList;
 import org.apache.jackrabbit.guava.common.collect.ImmutableMap;
 import org.apache.jackrabbit.guava.common.collect.Iterables;
 import org.apache.jackrabbit.guava.common.collect.Maps;
-import org.apache.jackrabbit.guava.common.collect.Sets;
 
 /**
  * Implementation of a NodeStore on {@link DocumentStore}.
@@ -552,7 +551,7 @@ public final class DocumentNodeStore
      * reverts changes done by commits in the set that are older than the
      * current head revision.
      */
-    private final Set<Revision> inDoubtTrunkCommits = Sets.newConcurrentHashSet();
+    private final Set<Revision> inDoubtTrunkCommits = CollectionUtils.newConcurrentHashSet();
 
     /**
      * Contains journal entry revisions (branch commit style) that were created
@@ -561,7 +560,7 @@ public final class DocumentNodeStore
      * upon each backgroundWrite. It is used to avoid duplicate journal entries
      * that would otherwise be created as a result of merge (normal plus exclusive) retries
      */
-    private final Set<String> pendingRollbackInvalidations = Sets.newConcurrentHashSet();
+    private final Set<String> pendingRollbackInvalidations = CollectionUtils.newConcurrentHashSet();
 
     private final Predicate<Path> nodeCachePredicate;
 
