@@ -216,7 +216,7 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
         TokenLoginModule lm = new TokenLoginModule();
         lm.initialize(new Subject(), new TestCallbackHandler(null),
                 ImmutableMap.of(AbstractLoginModule.SHARED_KEY_CREDENTIALS, mock(Credentials.class)),
-                ImmutableMap.of());
+                Map.of());
 
         assertFalse(lm.login());
         assertFalse(lm.commit());
@@ -340,7 +340,7 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
         TokenLoginModule lm = new TokenLoginModule();
         lm.initialize(new Subject(), new TestCallbackHandler(tp),
                 ImmutableMap.of(AbstractLoginModule.SHARED_KEY_CREDENTIALS, "notCredentialsObject"),
-                ImmutableMap.of());
+                Map.of());
 
         assertFalse(lm.login());
         assertFalse(lm.commit());
@@ -354,8 +354,8 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
 
         TokenLoginModule lm = new TokenLoginModule();
         lm.initialize(new Subject(), new TestCallbackHandler(tp),
-                ImmutableMap.of(),
-                ImmutableMap.of());
+                Map.of(),
+                Map.of());
 
         assertFalse(lm.login());
         assertFalse(lm.commit());
@@ -382,7 +382,7 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
         TokenLoginModule lm = new TokenLoginModule();
         lm.initialize(new Subject(), new TestCallbackHandler(tp, cbh),
                 sharedState,
-                ImmutableMap.of());
+                Map.of());
 
         assertFalse(lm.login());
         assertFalse(lm.commit());
@@ -409,7 +409,7 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
         TokenLoginModule lm = new TokenLoginModule();
         lm.initialize(new Subject(), new TestCallbackHandler(tp, cbh),
                 sharedState,
-                ImmutableMap.of());
+                Map.of());
 
         assertFalse(lm.login());
         assertFalse(lm.commit());
