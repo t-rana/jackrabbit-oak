@@ -422,7 +422,7 @@ abstract class AbstractExternalTest extends AbstractTest<RepositoryFixture> {
         @NotNull
         @Override
         public Map<String, ?> getProperties() {
-            return Map.of();
+            return ImmutableMap.of();
         }
 
 

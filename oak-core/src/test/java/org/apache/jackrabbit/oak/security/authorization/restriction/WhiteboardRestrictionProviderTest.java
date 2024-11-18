@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.oak.security.authorization.restriction;
 
+import org.apache.jackrabbit.guava.common.collect.ImmutableMap;
 import org.apache.jackrabbit.oak.api.Tree;
 import org.apache.jackrabbit.oak.commons.PathUtils;
 import org.apache.jackrabbit.oak.spi.security.authorization.restriction.Restriction;
@@ -29,7 +30,6 @@ import org.junit.Test;
 
 import javax.jcr.Value;
 
-import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertSame;
@@ -56,7 +56,7 @@ public class WhiteboardRestrictionProviderTest {
         when(registered.getPattern(PathUtils.ROOT_PATH, tree)).thenThrow(new RestrictionException());
 
         restrictionProvider.start(whiteboard);
-        whiteboard.register(RestrictionProvider.class, registered, Map.of());
+        whiteboard.register(RestrictionProvider.class, registered, ImmutableMap.of());
     }
 
     @After

@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicLong;
@@ -189,11 +188,11 @@ public class CachedMembershipLoginTest extends AbstractExternalTest {
                         new AppConfigurationEntry(
                                 GuestLoginModule.class.getName(),
                                 OPTIONAL,
-                                Map.of()),
+                                ImmutableMap.of()),
                         new AppConfigurationEntry(
                                 TokenLoginModule.class.getName(),
                                 SUFFICIENT,
-                                Map.of()),
+                                ImmutableMap.of()),
                         new AppConfigurationEntry(
                                 ExternalLoginModule.class.getName(),
                                 SUFFICIENT,
@@ -203,7 +202,7 @@ public class CachedMembershipLoginTest extends AbstractExternalTest {
                         new AppConfigurationEntry(
                                 LoginModuleImpl.class.getName(),
                                 SUFFICIENT,
-                                Map.of())
+                                ImmutableMap.of())
                 };
             }
         };

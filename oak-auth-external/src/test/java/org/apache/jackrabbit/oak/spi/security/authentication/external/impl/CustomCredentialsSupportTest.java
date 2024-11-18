@@ -219,7 +219,7 @@ public class CustomCredentialsSupportTest extends ExternalLoginTestBase {
             if (credentials instanceof TestCredentials) {
                 return attributes;
             } else {
-                return Map.of();
+                return ImmutableMap.of();
             }
         }
 

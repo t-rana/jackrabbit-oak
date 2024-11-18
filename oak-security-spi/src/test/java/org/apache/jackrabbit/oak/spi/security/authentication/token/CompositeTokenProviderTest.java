@@ -114,22 +114,22 @@ public class CompositeTokenProviderTest {
 
     @Test
     public void testCreateTokenFromId() {
-        assertSame(info, composite.createToken(USERID, Map.of()));
+        assertSame(info, composite.createToken(USERID, ImmutableMap.of()));
     }
 
     @Test
     public void testCreateTokenFromUnknownId() {
-        assertNull(composite.createToken("unknown", Map.of()));
+        assertNull(composite.createToken("unknown", ImmutableMap.of()));
     }
 
     @Test
     public void testCreateTokenFromIdFirstWins() {
         TokenInfo ti = mock(TokenInfo.class);
-        TokenProvider tp1 = when(mock(TokenProvider.class).createToken(USERID, Map.of())).thenReturn(ti).getMock();
+        TokenProvider tp1 = when(mock(TokenProvider.class).createToken(USERID, ImmutableMap.of())).thenReturn(ti).getMock();
         TokenProvider tp2 = new TestTokenProvider();
 
         TokenProvider ctp = CompositeTokenProvider.newInstance(tp1, tp2);
-        assertSame(ti, ctp.createToken(USERID, Map.of()));
+        assertSame(ti, ctp.createToken(USERID, ImmutableMap.of()));
     }
 
     @Test

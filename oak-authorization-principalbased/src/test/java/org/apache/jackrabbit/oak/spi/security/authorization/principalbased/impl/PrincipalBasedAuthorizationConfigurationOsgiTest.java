@@ -40,7 +40,6 @@ import org.apache.sling.testing.mock.osgi.junit.OsgiContext;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -56,7 +55,7 @@ public class PrincipalBasedAuthorizationConfigurationOsgiTest extends AbstractPr
 
     @Test(expected = ReferenceViolationException.class)
     public void testMissingMandatoryReferences() {
-        context.registerInjectActivateService(pbac, Map.of());
+        context.registerInjectActivateService(pbac, ImmutableMap.of());
     }
 
     @Test(expected = ReferenceViolationException.class)
@@ -68,7 +67,7 @@ public class PrincipalBasedAuthorizationConfigurationOsgiTest extends AbstractPr
     @Test(expected = ReferenceViolationException.class)
     public void testMissingFilterProviderReference() {
         context.registerInjectActivateService(new MountInfoProviderService());
-        context.registerInjectActivateService(pbac, Map.of());
+        context.registerInjectActivateService(pbac, ImmutableMap.of());
     }
 
     @Test
@@ -80,7 +79,7 @@ public class PrincipalBasedAuthorizationConfigurationOsgiTest extends AbstractPr
         context.registerInjectActivateService(mipService, ImmutableMap.of("mountedPaths", new String[] {SUPPORTED_PATH + "/some/subtree", "/etc"}));
 
         try {
-            context.registerInjectActivateService(pbac, Map.of());
+            context.registerInjectActivateService(pbac, ImmutableMap.of());
         } catch (RuntimeException e) {
             assertTrue(e.getCause() instanceof IllegalStateException);
         }
@@ -94,7 +93,7 @@ public class PrincipalBasedAuthorizationConfigurationOsgiTest extends AbstractPr
         MountInfoProviderService mipService = new MountInfoProviderService();
         context.registerInjectActivateService(mipService, ImmutableMap.of("mountedPaths", new String[] {SUPPORTED_PATH}));
 
-        context.registerInjectActivateService(pbac, Map.of());
+        context.registerInjectActivateService(pbac, ImmutableMap.of());
     }
 
     @Test
@@ -105,7 +104,7 @@ public class PrincipalBasedAuthorizationConfigurationOsgiTest extends AbstractPr
         MountInfoProviderService mipService = new MountInfoProviderService();
         context.registerInjectActivateService(mipService, ImmutableMap.of("mountedPaths", new String[] {Text.getRelativeParent(SUPPORTED_PATH, 1)}));
 
-        context.registerInjectActivateService(pbac, Map.of());
+        context.registerInjectActivateService(pbac, ImmutableMap.of());
     }
 
     @Test
@@ -116,7 +115,7 @@ public class PrincipalBasedAuthorizationConfigurationOsgiTest extends AbstractPr
         MountInfoProviderService mipService = new MountInfoProviderService();
         context.registerInjectActivateService(mipService, ImmutableMap.of("mountedPaths", new String[] {"/etc", "/var/some/mount", UserConstants.DEFAULT_GROUP_PATH}));
 
-        context.registerInjectActivateService(pbac, Map.of());
+        context.registerInjectActivateService(pbac, ImmutableMap.of());
     }
 
     @Test

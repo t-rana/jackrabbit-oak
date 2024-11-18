@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.oak.core;
 
+import org.apache.jackrabbit.guava.common.collect.ImmutableMap;
 import org.apache.jackrabbit.oak.AbstractSecurityTest;
 import org.apache.jackrabbit.oak.api.AuthInfo;
 import org.apache.jackrabbit.oak.api.ContentSession;
@@ -29,7 +30,6 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -71,7 +71,7 @@ public class ImmutableRootTest extends AbstractSecurityTest {
 
     @Test(expected = UnsupportedOperationException.class)
     public void testCommitWithMap() {
-        root.commit(Map.of());
+        root.commit(ImmutableMap.of());
     }
 
     @Test(expected = UnsupportedOperationException.class)
