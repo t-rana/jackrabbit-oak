@@ -33,7 +33,6 @@ import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginException;
 
-import org.apache.jackrabbit.guava.common.collect.ImmutableMap;
 import org.apache.jackrabbit.guava.common.collect.ImmutableSet;
 import org.apache.jackrabbit.guava.common.collect.Maps;
 import org.apache.jackrabbit.api.security.authentication.token.TokenCredentials;
@@ -181,7 +180,7 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
         TokenProvider tp = tokenConfig.getTokenProvider(root);
 
         SimpleCredentials sc = (SimpleCredentials) getAdminCredentials();
-        TokenInfo info = tp.createToken(sc.getUserID(), ImmutableMap.of("public", "value"));
+        TokenInfo info = tp.createToken(sc.getUserID(), Map.of("public", "value"));
 
         TokenCredentials tc = new TokenCredentials(info.getToken());
         try (ContentSession cs = login(tc)) {
@@ -193,7 +192,7 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
     @Test
     public void testMissingTokenProvider() throws Exception {
         TokenLoginModule lm = new TokenLoginModule();
-        lm.initialize(new Subject(), null, ImmutableMap.<String, Object>of(), ImmutableMap.<String, Object>of());
+        lm.initialize(new Subject(), null, Map.of(), Map.of());
 
         assertFalse(lm.login());
         assertFalse(lm.commit());
@@ -203,7 +202,7 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
     @Test
     public void testMissingTokenProvider2() throws Exception {
         TokenLoginModule lm = new TokenLoginModule();
-        lm.initialize(new Subject(), new TestCallbackHandler(null), ImmutableMap.<String, Object>of(), ImmutableMap.<String, Object>of());
+        lm.initialize(new Subject(), new TestCallbackHandler(null), Map.of(), Map.of());
 
         assertFalse(lm.login());
         assertFalse(lm.commit());
@@ -215,8 +214,8 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
     public void testMissingTokenProvider3() throws Exception {
         TokenLoginModule lm = new TokenLoginModule();
         lm.initialize(new Subject(), new TestCallbackHandler(null),
-                ImmutableMap.of(AbstractLoginModule.SHARED_KEY_CREDENTIALS, mock(Credentials.class)),
-                ImmutableMap.of());
+                Map.of(AbstractLoginModule.SHARED_KEY_CREDENTIALS, mock(Credentials.class)),
+                Map.of());
 
         assertFalse(lm.login());
         assertFalse(lm.commit());
@@ -228,7 +227,7 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
         TokenProvider tp = new TokenProviderImpl(root, ConfigurationParameters.EMPTY, getUserConfiguration());
 
         TokenLoginModule lm = new TokenLoginModule();
-        lm.initialize(new Subject(), new TestCallbackHandler(tp), ImmutableMap.<String, Object>of(), ImmutableMap.<String, Object>of());
+        lm.initialize(new Subject(), new TestCallbackHandler(tp), Map.of(), Map.of());
 
         assertFalse(lm.login());
         assertFalse(lm.commit());
@@ -238,7 +237,7 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
     @Test
     public void testUnsupportedCallbackException() throws Exception {
         TokenLoginModule lm = new TokenLoginModule();
-        lm.initialize(new Subject(), new ThrowingCallbackHandler(UnsupportedCallbackException.class), ImmutableMap.<String, Object>of(), ImmutableMap.<String, Object>of());
+        lm.initialize(new Subject(), new ThrowingCallbackHandler(UnsupportedCallbackException.class), Map.of(), Map.of());
 
         assertFalse(lm.login());
         assertFalse(lm.commit());
@@ -248,7 +247,7 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
     @Test
     public void testIOException() throws Exception {
         TokenLoginModule lm = new TokenLoginModule();
-        lm.initialize(new Subject(), new ThrowingCallbackHandler(IOException.class), ImmutableMap.<String, Object>of(), ImmutableMap.<String, Object>of());
+        lm.initialize(new Subject(), new ThrowingCallbackHandler(IOException.class), Map.of(), Map.of());
 
         assertFalse(lm.login());
         assertFalse(lm.commit());
@@ -264,8 +263,8 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
 
         TokenLoginModule lm = new TokenLoginModule();
         lm.initialize(new Subject(), new TestCallbackHandler(tp),
-                ImmutableMap.<String, Object>of(AbstractLoginModule.SHARED_KEY_CREDENTIALS, new Credentials() {}),
-                ImmutableMap.<String, Object>of());
+                Map.of(AbstractLoginModule.SHARED_KEY_CREDENTIALS, new Credentials() {}),
+                Map.of());
 
         assertFalse(lm.login());
         try {
@@ -282,7 +281,7 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
         TokenCredentials tc = new TokenCredentials("token");
 
         TokenLoginModule lm = new TokenLoginModule();
-        Map sharedState = Maps.newHashMap(ImmutableMap.of(AbstractLoginModule.SHARED_KEY_CREDENTIALS, tc));
+        Map sharedState = Maps.newHashMap(Map.of(AbstractLoginModule.SHARED_KEY_CREDENTIALS, tc));
 
         Subject subject = new Subject();
         CallbackHandler cbh = callbacks -> {
@@ -294,7 +293,7 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
         };
         lm.initialize(subject, new TestCallbackHandler(tp, cbh),
                 sharedState,
-                ImmutableMap.<String, Object>of());
+                Map.of());
 
         assertTrue(lm.login());
         assertTrue(lm.commit());
@@ -320,10 +319,10 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
         sc.setAttribute(TOKEN_ATTRIBUTE, TOKEN_ATTRIBUTE_DO_CREATE);
 
         TokenLoginModule lm = new TokenLoginModule();
-        Map sharedState = Maps.newHashMap(ImmutableMap.of(AbstractLoginModule.SHARED_KEY_CREDENTIALS, sc));
+        Map sharedState = Maps.newHashMap(Map.of(AbstractLoginModule.SHARED_KEY_CREDENTIALS, sc));
         lm.initialize(subject, new TestCallbackHandler(tp),
                 sharedState,
-                ImmutableMap.<String, Object>of());
+                Map.of());
 
         assertFalse(lm.login());
         assertFalse(lm.commit());
@@ -339,8 +338,8 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
 
         TokenLoginModule lm = new TokenLoginModule();
         lm.initialize(new Subject(), new TestCallbackHandler(tp),
-                ImmutableMap.of(AbstractLoginModule.SHARED_KEY_CREDENTIALS, "notCredentialsObject"),
-                ImmutableMap.of());
+                Map.of(AbstractLoginModule.SHARED_KEY_CREDENTIALS, "notCredentialsObject"),
+                Map.of());
 
         assertFalse(lm.login());
         assertFalse(lm.commit());
@@ -354,8 +353,8 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
 
         TokenLoginModule lm = new TokenLoginModule();
         lm.initialize(new Subject(), new TestCallbackHandler(tp),
-                ImmutableMap.of(),
-                ImmutableMap.of());
+                Map.of(),
+                Map.of());
 
         assertFalse(lm.login());
         assertFalse(lm.commit());
@@ -376,13 +375,13 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
 
         SimpleCredentials sc = new SimpleCredentials(getTestUser().getID(), getTestUser().getID().toCharArray());
         sc.setAttribute(TOKEN_ATTRIBUTE, TOKEN_ATTRIBUTE_DO_CREATE);
-        Map sharedState = Maps.newHashMap(ImmutableMap.of(AbstractLoginModule.SHARED_KEY_CREDENTIALS, sc));
+        Map sharedState = Maps.newHashMap(Map.of(AbstractLoginModule.SHARED_KEY_CREDENTIALS, sc));
 
         TokenProvider tp = spy(new TokenProviderImpl(root, ConfigurationParameters.EMPTY, getUserConfiguration()));
         TokenLoginModule lm = new TokenLoginModule();
         lm.initialize(new Subject(), new TestCallbackHandler(tp, cbh),
                 sharedState,
-                ImmutableMap.of());
+                Map.of());
 
         assertFalse(lm.login());
         assertFalse(lm.commit());
@@ -403,13 +402,13 @@ public class TokenLoginModuleTest extends AbstractSecurityTest {
 
         SimpleCredentials sc = new SimpleCredentials(getTestUser().getID(), getTestUser().getID().toCharArray());
         sc.setAttribute(TOKEN_ATTRIBUTE, TOKEN_ATTRIBUTE_DO_CREATE);
-        Map sharedState = Maps.newHashMap(ImmutableMap.of(AbstractLoginModule.SHARED_KEY_CREDENTIALS, sc));
+        Map sharedState = Maps.newHashMap(Map.of(AbstractLoginModule.SHARED_KEY_CREDENTIALS, sc));
 
         TokenProvider tp = spy(new TokenProviderImpl(root, ConfigurationParameters.EMPTY, getUserConfiguration()));
         TokenLoginModule lm = new TokenLoginModule();
         lm.initialize(new Subject(), new TestCallbackHandler(tp, cbh),
                 sharedState,
-                ImmutableMap.of());
+                Map.of());
 
         assertFalse(lm.login());
         assertFalse(lm.commit());

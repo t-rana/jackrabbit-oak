@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.jcr.Credentials;
 
-import org.apache.jackrabbit.guava.common.collect.ImmutableMap;
 import org.apache.jackrabbit.guava.common.collect.ImmutableSet;
 import org.apache.jackrabbit.guava.common.collect.Maps;
 
@@ -68,7 +67,7 @@ public class TestCredentialsSupport implements CredentialsSupport {
         if (credentials instanceof Creds) {
             return ((Creds) credentials).attributes;
         } else {
-            return ImmutableMap.of();
+            return Map.of();
         }
     }
 
