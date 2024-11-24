@@ -16,14 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.jackrabbit.oak.query;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.jackrabbit.guava.common.collect.ImmutableSet;
 import org.apache.jackrabbit.guava.common.collect.Maps;
 import org.apache.jackrabbit.oak.api.jmx.QueryEngineSettingsMBean;
 import org.apache.jackrabbit.oak.osgi.OsgiWhiteboard;

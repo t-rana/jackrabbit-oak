@@ -86,8 +86,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.apache.jackrabbit.guava.common.collect.ImmutableSet;
-
 public class IndexUpdateTest {
 
     private static final EditorHook HOOK = new EditorHook(

@@ -23,7 +23,6 @@ import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
 
 import org.apache.jackrabbit.guava.common.collect.ImmutableMap;
-import org.apache.jackrabbit.guava.common.collect.ImmutableSet;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
