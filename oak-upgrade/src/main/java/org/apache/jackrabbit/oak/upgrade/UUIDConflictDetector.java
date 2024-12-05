@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -25,18 +26,20 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class UUIDConflictDetector {
+public class UUIDConflictDetector implements AutoCloseable {
 
     private static final Logger log = LoggerFactory.getLogger(UUIDConflictDetector.class);
     private final File dir;
     private final NodeStore sourceStore;
     private final NodeStore targetStore;
     private long timeStamp;
+    private final List<String> deleteFilePaths;
 
     public UUIDConflictDetector(NodeStore sourceStore, NodeStore targetStore, File dir) {
         this.sourceStore = sourceStore;
         this.targetStore = targetStore;
         this.dir = dir;
+        deleteFilePaths = new ArrayList<>();
         this.timeStamp = 0;
     }
 
@@ -77,7 +80,7 @@ public class UUIDConflictDetector {
         log.info("starting fetching uuid nodes from source repository at: {}", startTime);
         File sourceFile = new File(dir, "source_uuids_" + getTimeStamp() + ".txt");
         log.info("source file: {}", sourceFile.getName());
-        sourceFile.deleteOnExit();
+        deleteFilePaths.add(sourceFile.getAbsolutePath());
         try (BufferedWriter writer = Files.newBufferedWriter(sourceFile.toPath())) {
             for (String path : includePaths) {
                 NodeState state = getNodeAtPath(sourceStore.getRoot(), path);
@@ -128,7 +131,7 @@ public class UUIDConflictDetector {
         log.info("starting fetching uuid nodes from {} repository at: {}", prefix, startTime);
         File file = new File(dir, prefix + "_uuids_" + getTimeStamp() + ".txt");
         log.info("{} uuid file: {}", prefix, file.getName());
-        file.deleteOnExit();
+        deleteFilePaths.add(file.getAbsolutePath());
         try (BufferedWriter writer = Files.newBufferedWriter(file.toPath())) {
             gatherUUIDs(state, "", writer);
         }
@@ -142,6 +145,7 @@ public class UUIDConflictDetector {
         List<File> sortedFiles = ExternalSort.sortInBatch(file, Comparator.naturalOrder());
         log.info("sorting {} file completed in: {} ms", file.getName(), System.currentTimeMillis() - startTime);
         File sortedFile = new File(dir, prefix + "_uuids_" + getTimeStamp() + ".txt");
+        deleteFilePaths.add(sortedFile.getAbsolutePath());
         log.info("sorted {} uuid file: {}", prefix, sortedFile.getName());
 
         long mergeFileStartTime = System.currentTimeMillis();
@@ -207,5 +211,19 @@ public class UUIDConflictDetector {
 
     public long getTimeStamp() {
         return timeStamp == 0L ? Instant.now().toEpochMilli() : timeStamp;
+    }
+
+    @Override
+    public void close() {
+        for (String deleteFilePath : deleteFilePaths) {
+            File fileToDelete = new File(deleteFilePath);
+            if (fileToDelete.exists()) {
+                if (fileToDelete.delete()) {
+                    log.info("deleted file: {}", fileToDelete.getAbsolutePath());
+                } else {
+                    log.info("unable to delete file: {}", fileToDelete.getAbsolutePath());
+                }
+            }
+        }
     }
 }

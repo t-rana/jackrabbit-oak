@@ -127,6 +127,7 @@ public class OakUpgrade {
 
         boolean srcEmbedded = stores.srcUsesEmbeddedDatastore();
         DatastoreArguments datastores = new DatastoreArguments(migrationOptions, stores, srcEmbedded);
+        UUIDConflictDetector uuidConflictDetector = null;
 
         try (Closer closer = Closer.create()) {
             CliUtils.handleSigInt(closer);
@@ -136,11 +137,15 @@ public class OakUpgrade {
             BlobStore dstBlobStore = datastores.getDstBlobStore(srcBlobStore).create(closer);
             NodeStore targetNodeStore = stores.getDstStore().create(dstBlobStore, closer);
 
-            UUIDConflictDetector uuidConflictDetector = new UUIDConflictDetector(sourceNodeStore, targetNodeStore, new File("/tmp"));
+            uuidConflictDetector = new UUIDConflictDetector(sourceNodeStore, targetNodeStore, new File("/tmp"));
             uuidConflictDetector.detectConflicts(migrationOptions.getIncludePaths());
         } catch (Exception e) {
             log.error("Error while checking for uuid clashes: ", e);
             throw e;
+        } finally {
+            if (uuidConflictDetector != null) {
+                uuidConflictDetector.close();
+            }
         }
     }
 }
