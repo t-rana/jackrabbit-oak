@@ -24,7 +24,6 @@ import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.oak.api.Blob;
 import org.apache.jackrabbit.oak.api.PropertyState;
 import org.apache.jackrabbit.oak.api.Type;
-import org.apache.jackrabbit.oak.cache.CacheStats;
 import org.apache.jackrabbit.oak.commons.io.LazyInputStream;
 import org.apache.jackrabbit.oak.plugins.index.fulltext.ExtractedText;
 import org.apache.jackrabbit.oak.plugins.index.search.ExtractedTextCache;
@@ -98,9 +97,6 @@ public class FulltextBinaryTextExtractor {
 
     public void logStats() {
         log.info("[{}] Text extraction statistics: {}", getIndexName(), textExtractionStats.formatStats());
-        CacheStats cacheStats = extractedTextCache.getCacheStats();
-        log.info("[{}] Text extraction cache statistics: {}",
-                getIndexName(), cacheStats == null ? "N/A" : cacheStats.cacheInfoAsString());
     }
 
     public List<String> newBinary(PropertyState property, NodeState state, String path) {
@@ -244,9 +240,14 @@ public class FulltextBinaryTextExtractor {
         return parser;
     }
 
-    private boolean isSupportedMediaType(String type) {
+    boolean isSupportedMediaType(String type) {
+        // we need to initialize the fields separately
+        // to prevent null pointer exceptions if the method
+        // is called concurrently from multiple threads
         if (supportedMediaTypes == null) {
             supportedMediaTypes = getParser().getSupportedTypes(new ParseContext());
+        }
+        if (nonIndexedMediaType == null) {
             nonIndexedMediaType = getNonIndexedMediaTypes();
         }
         MediaType mediaType = MediaType.parse(type);

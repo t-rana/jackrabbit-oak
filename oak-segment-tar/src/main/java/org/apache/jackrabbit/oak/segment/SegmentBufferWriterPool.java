@@ -19,25 +19,25 @@
 package org.apache.jackrabbit.oak.segment;
 
 import static java.util.Objects.requireNonNull;
-import static org.apache.jackrabbit.guava.common.base.Preconditions.checkState;
-import static org.apache.jackrabbit.guava.common.collect.Lists.newArrayList;
-import static org.apache.jackrabbit.guava.common.collect.Maps.newConcurrentMap;
 
 import static java.lang.Thread.currentThread;
 
 import java.io.IOException;
 import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 
 import org.apache.jackrabbit.guava.common.util.concurrent.Monitor;
+import org.apache.jackrabbit.oak.commons.conditions.Validate;
 import org.apache.jackrabbit.oak.segment.file.tar.GCGeneration;
 import org.jetbrains.annotations.NotNull;
 
@@ -52,9 +52,6 @@ public abstract class SegmentBufferWriterPool implements WriteOperationHandler {
     private final SegmentIdProvider idProvider;
 
     @NotNull
-    private final SegmentReader reader;
-
-    @NotNull
     private final Supplier<GCGeneration> gcGeneration;
 
     @NotNull
@@ -64,11 +61,9 @@ public abstract class SegmentBufferWriterPool implements WriteOperationHandler {
 
     private SegmentBufferWriterPool(
             @NotNull SegmentIdProvider idProvider,
-            @NotNull SegmentReader reader,
             @NotNull String wid,
             @NotNull Supplier<GCGeneration> gcGeneration) {
         this.idProvider = requireNonNull(idProvider);
-        this.reader = requireNonNull(reader);
         this.wid = requireNonNull(wid);
         this.gcGeneration = requireNonNull(gcGeneration);
     }
@@ -82,19 +77,15 @@ public abstract class SegmentBufferWriterPool implements WriteOperationHandler {
         @NotNull
         private final SegmentIdProvider idProvider;
         @NotNull
-        private final SegmentReader reader;
-        @NotNull
         private final String wid;
         @NotNull
         private final Supplier<GCGeneration> gcGeneration;
 
         private SegmentBufferWriterPoolFactory(
                 @NotNull SegmentIdProvider idProvider,
-                @NotNull SegmentReader reader,
                 @NotNull String wid,
                 @NotNull Supplier<GCGeneration> gcGeneration) {
             this.idProvider = requireNonNull(idProvider);
-            this.reader = requireNonNull(reader);
             this.wid = requireNonNull(wid);
             this.gcGeneration = requireNonNull(gcGeneration);
         }
@@ -103,9 +94,9 @@ public abstract class SegmentBufferWriterPool implements WriteOperationHandler {
         public SegmentBufferWriterPool newPool(@NotNull SegmentBufferWriterPool.PoolType poolType) {
             switch (poolType) {
                 case GLOBAL:
-                    return new GlobalSegmentBufferWriterPool(idProvider, reader, wid, gcGeneration);
+                    return new GlobalSegmentBufferWriterPool(idProvider, wid, gcGeneration);
                 case THREAD_SPECIFIC:
-                    return new ThreadSpecificSegmentBufferWriterPool(idProvider, reader, wid, gcGeneration);
+                    return new ThreadSpecificSegmentBufferWriterPool(idProvider, wid, gcGeneration);
                 default:
                     throw new IllegalArgumentException("Unknown writer pool type.");
             }
@@ -114,10 +105,9 @@ public abstract class SegmentBufferWriterPool implements WriteOperationHandler {
 
     public static SegmentBufferWriterPoolFactory factory(
             @NotNull SegmentIdProvider idProvider,
-            @NotNull SegmentReader reader,
             @NotNull String wid,
             @NotNull Supplier<GCGeneration> gcGeneration) {
-        return new SegmentBufferWriterPoolFactory(idProvider, reader, wid, gcGeneration);
+        return new SegmentBufferWriterPoolFactory(idProvider, wid, gcGeneration);
     }
 
     private static class ThreadSpecificSegmentBufferWriterPool extends SegmentBufferWriterPool {
@@ -132,14 +122,13 @@ public abstract class SegmentBufferWriterPool implements WriteOperationHandler {
          * Pool of writers. Every thread is assigned a unique writer per GC generation, therefore only requiring
          * a concurrent map to synchronize access to them.
          */
-        private final ConcurrentMap<Object, SegmentBufferWriter> writers = newConcurrentMap();
+        private final ConcurrentMap<Object, SegmentBufferWriter> writers = new ConcurrentHashMap<>();
 
         public ThreadSpecificSegmentBufferWriterPool(
                 @NotNull SegmentIdProvider idProvider,
-                @NotNull SegmentReader reader,
                 @NotNull String wid,
                 @NotNull Supplier<GCGeneration> gcGeneration) {
-            super(idProvider, reader, wid, gcGeneration);
+            super(idProvider, wid, gcGeneration);
         }
 
         @NotNull
@@ -201,10 +190,9 @@ public abstract class SegmentBufferWriterPool implements WriteOperationHandler {
 
         public GlobalSegmentBufferWriterPool(
                 @NotNull SegmentIdProvider idProvider,
-                @NotNull SegmentReader reader,
                 @NotNull String wid,
                 @NotNull Supplier<GCGeneration> gcGeneration) {
-            super(idProvider, reader, wid, gcGeneration);
+            super(idProvider, wid, gcGeneration);
         }
 
         @NotNull
@@ -222,8 +210,8 @@ public abstract class SegmentBufferWriterPool implements WriteOperationHandler {
 
         @Override
         public void flush(@NotNull SegmentStore store) throws IOException {
-            List<SegmentBufferWriter> toFlush = newArrayList();
-            List<SegmentBufferWriter> toReturn = newArrayList();
+            List<SegmentBufferWriter> toFlush = new ArrayList<>();
+            List<SegmentBufferWriter> toReturn = new ArrayList<>();
 
             poolMonitor.enter();
             try {
@@ -319,7 +307,7 @@ public abstract class SegmentBufferWriterPool implements WriteOperationHandler {
             poolMonitor.enter();
             try {
                 if (borrowed.remove(writer)) {
-                    checkState(writers.put(key, writer) == null);
+                    Validate.checkState(writers.put(key, writer) == null);
                 } else {
                     // Defer flush this writer as it was borrowed while flush() was called.
                     disposed.add(writer);
@@ -338,7 +326,7 @@ public abstract class SegmentBufferWriterPool implements WriteOperationHandler {
 
     @NotNull
     protected SegmentBufferWriter newWriter(@NotNull GCGeneration gcGeneration) {
-        return new SegmentBufferWriter(idProvider, reader, getWriterId(), gcGeneration);
+        return new SegmentBufferWriter(idProvider, getWriterId(), gcGeneration);
     }
 
     @NotNull

@@ -20,16 +20,15 @@ import java.security.Principal;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import org.apache.jackrabbit.guava.common.collect.ImmutableMap;
 import org.apache.jackrabbit.guava.common.collect.ImmutableSet;
 import org.apache.jackrabbit.guava.common.collect.Iterables;
 import org.apache.jackrabbit.guava.common.collect.Iterators;
 import org.apache.jackrabbit.guava.common.collect.Maps;
-import org.apache.jackrabbit.guava.common.collect.Sets;
 
 import org.apache.jackrabbit.api.security.principal.GroupPrincipal;
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
@@ -74,7 +73,7 @@ public final class TestPrincipalProvider implements PrincipalProvider {
     }
 
     public Iterable<Principal> all() {
-        Set<Principal> all = Sets.newLinkedHashSet(principals.values());
+        Set<Principal> all = new LinkedHashSet<>(principals.values());
         all.add(EveryonePrincipal.getInstance());
         return all;
     }
@@ -198,13 +197,13 @@ public final class TestPrincipalProvider implements PrincipalProvider {
         private static final GroupPrincipal gr2 = new TestGroup("tGr2", a);
         private static final GroupPrincipal gr3 = new TestGroup("gr2", gr2, ac);
 
-        private static final Map<String, Principal> principals = ImmutableMap.<String, Principal>builder()
-                .put(a.getName(), a)
-                .put("b", new PrincipalImpl("b"))
-                .put(ac.getName(), ac)
-                .put(gr1.getName(), gr1)
-                .put(gr2.getName(), gr2)
-                .put(gr3.getName(), gr3).build();
+        private static final Map<String, Principal> principals = Map.of(
+                a.getName(), a,
+                "b", new PrincipalImpl("b"),
+                ac.getName(), ac,
+                gr1.getName(), gr1,
+                gr2.getName(), gr2,
+                gr3.getName(), gr3);
 
         private static Map<String, Principal> asMap() {
             return principals;
