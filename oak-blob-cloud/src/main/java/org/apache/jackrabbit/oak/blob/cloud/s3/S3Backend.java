@@ -496,6 +496,9 @@ public class S3Backend extends AbstractSharedBackend {
     private void setRemoteStorageMode() {
         String s3EndPoint = properties.getProperty(S3Constants.S3_END_POINT, "");
         if (s3EndPoint.contains("googleapis")) {
+            if (properties.get(S3Constants.MODE) == RemoteStorageMode.S3) {
+                LOG.warn("Mismatch between remote storage mode and s3EndPoint, overriding mode to GCP");
+            }
             properties.put(S3Constants.MODE, RemoteStorageMode.GCP);
             return;
         }
