@@ -490,6 +490,17 @@ public class S3Backend extends AbstractSharedBackend {
      */
     public void setProperties(Properties properties) {
         this.properties = properties;
+        setRemoteStorageMode();
+    }
+
+    private void setRemoteStorageMode() {
+        String s3EndPoint = properties.getProperty(S3Constants.S3_END_POINT, "");
+        if (s3EndPoint.contains("https://storage.googleapis.com")) {
+            properties.putIfAbsent(S3Constants.MODE, RemoteStorageMode.GCP);
+            return;
+        }
+        // default mode is S3
+        properties.putIfAbsent(S3Constants.MODE, RemoteStorageMode.S3);
     }
 
     @Override
