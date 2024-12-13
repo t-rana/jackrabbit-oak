@@ -1229,13 +1229,13 @@ public class S3Backend extends AbstractSharedBackend {
         long count = 0;
         try {
             Thread.currentThread().setContextClassLoader(
-                    getClass().getClassLoader());
+                getClass().getClassLoader());
             ObjectListing prevObjectListing = s3service.listObjects(bucket);
             List<DeleteObjectsRequest.KeyVersion> deleteList = new ArrayList<DeleteObjectsRequest.KeyVersion>();
             List<String> keysToDelete = new ArrayList<>();
             int nThreads = Integer.parseInt(properties.getProperty("maxConnections"));
             ExecutorService executor = Executors.newFixedThreadPool(nThreads,
-                    new NamedThreadFactory("s3-object-rename-worker"));
+                new NamedThreadFactory("s3-object-rename-worker"));
             boolean taskAdded = false;
             while (true) {
                 for (S3ObjectSummary s3ObjSumm : prevObjectListing.getObjectSummaries()) {
@@ -1243,7 +1243,7 @@ public class S3Backend extends AbstractSharedBackend {
                     taskAdded = true;
                     count++;
                     // delete the object if it follows old key name format
-                    if (s3ObjSumm.getKey().startsWith(KEY_PREFIX)) {
+                    if( s3ObjSumm.getKey().startsWith(KEY_PREFIX)) {
                         deleteList.add(new DeleteObjectsRequest.KeyVersion(
                                 s3ObjSumm.getKey()));
                         keysToDelete.add(s3ObjSumm.getKey());
@@ -1259,14 +1259,14 @@ public class S3Backend extends AbstractSharedBackend {
             try {
                 // Wait until all threads are finish
                 while (taskAdded
-                        && !executor.awaitTermination(10, TimeUnit.SECONDS)) {
+                    && !executor.awaitTermination(10, TimeUnit.SECONDS)) {
                     LOG.info("Rename S3 keys tasks timedout. Waiting again");
                 }
             } catch (InterruptedException ie) {
 
             }
             LOG.info("Renamed [{}] keys, time taken [{}]sec", count,
-                    ((System.currentTimeMillis() - startTime) / 1000));
+                ((System.currentTimeMillis() - startTime) / 1000));
             // Delete older keys.
             if (!deleteList.isEmpty()) {
                 RemoteStorageMode mode = (RemoteStorageMode) properties.getOrDefault(S3Constants.MODE, RemoteStorageMode.S3);
