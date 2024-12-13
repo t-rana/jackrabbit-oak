@@ -1237,12 +1237,12 @@ public class S3Backend extends AbstractSharedBackend {
         long count = 0;
         try {
             Thread.currentThread().setContextClassLoader(
-                    getClass().getClassLoader());
+                getClass().getClassLoader());
             ObjectListing prevObjectListing = s3service.listObjects(bucket);
             List<DeleteObjectsRequest.KeyVersion> deleteList = new ArrayList<DeleteObjectsRequest.KeyVersion>();
             int nThreads = Integer.parseInt(properties.getProperty("maxConnections"));
             ExecutorService executor = Executors.newFixedThreadPool(nThreads,
-                    new NamedThreadFactory("s3-object-rename-worker"));
+                new NamedThreadFactory("s3-object-rename-worker"));
             boolean taskAdded = false;
             while (true) {
                 for (S3ObjectSummary s3ObjSumm : prevObjectListing.getObjectSummaries()) {
@@ -1252,7 +1252,7 @@ public class S3Backend extends AbstractSharedBackend {
                     // delete the object if it follows old key name format
                     if( s3ObjSumm.getKey().startsWith(KEY_PREFIX)) {
                         deleteList.add(new DeleteObjectsRequest.KeyVersion(
-                                s3ObjSumm.getKey()));
+                            s3ObjSumm.getKey()));
                     }
                 }
                 if (!prevObjectListing.isTruncated()) break;
@@ -1265,26 +1265,26 @@ public class S3Backend extends AbstractSharedBackend {
             try {
                 // Wait until all threads are finish
                 while (taskAdded
-                        && !executor.awaitTermination(10, TimeUnit.SECONDS)) {
+                    && !executor.awaitTermination(10, TimeUnit.SECONDS)) {
                     LOG.info("Rename S3 keys tasks timedout. Waiting again");
                 }
             } catch (InterruptedException ie) {
 
             }
             LOG.info("Renamed [{}] keys, time taken [{}]sec", count,
-                    ((System.currentTimeMillis() - startTime) / 1000));
+                ((System.currentTimeMillis() - startTime) / 1000));
             // Delete older keys.
             if (deleteList.size() > 0) {
                 DeleteObjectsRequest delObjsReq = new DeleteObjectsRequest(
-                        bucket);
+                    bucket);
                 int batchSize = 500, startIndex = 0, size = deleteList.size();
                 int endIndex = batchSize < size ? batchSize : size;
                 while (endIndex <= size) {
                     delObjsReq.setKeys(Collections.unmodifiableList(deleteList.subList(
-                            startIndex, endIndex)));
+                        startIndex, endIndex)));
                     DeleteObjectsResult dobjs = s3service.deleteObjects(delObjsReq);
                     LOG.info("Records[{}] deleted in datastore from index [{}] to [{}]",
-                            dobjs.getDeletedObjects().size(), startIndex, (endIndex - 1));
+                        dobjs.getDeletedObjects().size(), startIndex, (endIndex - 1));
                     if (endIndex == size) {
                         break;
                     } else {
