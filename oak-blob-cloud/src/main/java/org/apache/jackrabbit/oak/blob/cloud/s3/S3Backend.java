@@ -343,7 +343,10 @@ public class S3Backend extends AbstractSharedBackend {
                     objectMetaData.getLastModified().getTime());
                 CopyObjectRequest copReq = new CopyObjectRequest(bucket, key,
                     bucket, key);
-                copReq.setNewObjectMetadata(objectMetaData);
+                LOG.warn("Object MetaData before copy: {}", objectMetaData.getRawMetadata());
+                if (properties.getOrDefault(S3Constants.MODE, RemoteStorageMode.S3) == RemoteStorageMode.S3) {
+                    copReq.setNewObjectMetadata(objectMetaData);
+                }
                 Copy copy = tmx.copy(s3ReqDecorator.decorate(copReq));
                 try {
                     copy.waitForCopyResult();
