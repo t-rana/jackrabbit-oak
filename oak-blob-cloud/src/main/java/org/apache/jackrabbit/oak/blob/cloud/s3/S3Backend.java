@@ -25,6 +25,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -33,6 +34,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.UUID;
@@ -57,6 +59,7 @@ import org.apache.jackrabbit.oak.plugins.blob.datastore.directaccess.DataRecordU
 import org.apache.jackrabbit.oak.spi.blob.AbstractDataRecord;
 import org.apache.jackrabbit.oak.spi.blob.AbstractSharedBackend;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1368,8 +1371,15 @@ public class S3Backend extends AbstractSharedBackend {
     /**
      * Enum to indicate remote storage mode
      */
-    private enum RemoteStorageMode {
+    enum RemoteStorageMode {
         S3,
-        GCP
+        GCP;
+
+        @NotNull
+        static Optional<RemoteStorageMode> from(String mode) {
+            return Arrays.stream(RemoteStorageMode.values())
+                    .filter(remoteStorageMode -> remoteStorageMode.name().equalsIgnoreCase(mode))
+                    .findFirst();
+        }
     }
 }
