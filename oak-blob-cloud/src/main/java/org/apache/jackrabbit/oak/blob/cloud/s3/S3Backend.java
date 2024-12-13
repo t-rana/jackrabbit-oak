@@ -1245,7 +1245,7 @@ public class S3Backend extends AbstractSharedBackend {
                     // delete the object if it follows old key name format
                     if( s3ObjSumm.getKey().startsWith(KEY_PREFIX)) {
                         deleteList.add(new DeleteObjectsRequest.KeyVersion(
-                                s3ObjSumm.getKey()));
+                            s3ObjSumm.getKey()));
                         keysToDelete.add(s3ObjSumm.getKey());
                     }
                 }
