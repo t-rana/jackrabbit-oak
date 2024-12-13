@@ -189,9 +189,8 @@ public class S3DataStoreUtils extends DataStoreUtils {
 
     @NotNull
     private static RemoteStorageMode getMode(@NotNull Properties props) {
-        return RemoteStorageMode.from(props.getProperty(S3Constants.MODE)).orElseGet(() ->
-                props.getProperty(S3Constants.S3_END_POINT, "").contains("googleapis") ?
-                        RemoteStorageMode.GCP : RemoteStorageMode.S3);
+        return props.getProperty(S3Constants.S3_END_POINT, "").contains("googleapis") ?
+                RemoteStorageMode.GCP : RemoteStorageMode.S3;
     }
 
     protected static HttpsURLConnection getHttpsConnection(long length, URI uri) throws IOException {

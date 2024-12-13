@@ -1372,13 +1372,6 @@ public class S3Backend extends AbstractSharedBackend {
      */
     enum RemoteStorageMode {
         S3,
-        GCP;
-
-        @NotNull
-        static Optional<RemoteStorageMode> from(String mode) {
-            return Arrays.stream(RemoteStorageMode.values())
-                    .filter(remoteStorageMode -> remoteStorageMode.name().equalsIgnoreCase(mode))
-                    .findFirst();
-        }
+        GCP
     }
 }
