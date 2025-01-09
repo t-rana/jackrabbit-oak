@@ -78,7 +78,6 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
-import static org.apache.jackrabbit.guava.common.collect.Iterables.all;
 import static org.apache.jackrabbit.guava.common.collect.Iterators.partition;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static org.apache.jackrabbit.oak.plugins.document.Collection.NODES;
@@ -2313,7 +2312,7 @@ public class VersionGarbageCollector {
             Map<Revision, Range> prevRanges = doc.getPreviousRanges(true);
             if (prevRanges.isEmpty()) {
                 return Collections.emptyIterator();
-            } else if (all(prevRanges.values(), FIRST_LEVEL::test)) {
+            } else if (prevRanges.values().stream().allMatch(FIRST_LEVEL)) {
                 // all previous document ids can be constructed from the
                 // previous ranges map. this works for first level previous
                 // documents only.

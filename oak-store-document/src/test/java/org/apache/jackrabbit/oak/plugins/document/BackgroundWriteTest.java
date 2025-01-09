@@ -18,11 +18,11 @@ package org.apache.jackrabbit.oak.plugins.document;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.jackrabbit.oak.plugins.document.memory.MemoryDocumentStore;
 import org.junit.Test;
 
-import static org.apache.jackrabbit.guava.common.collect.Iterables.all;
 import static org.apache.jackrabbit.oak.plugins.document.TestUtils.IS_LAST_REV_UPDATE;
 import static org.junit.Assert.assertTrue;
 
@@ -64,7 +64,8 @@ public class BackgroundWriteTest {
         @Override
         public <T extends Document> List<T> createOrUpdate(Collection<T> collection,
                                                            List<UpdateOp> updateOps) {
-            if (all(updateOps, IS_LAST_REV_UPDATE::test)) {
+            Objects.requireNonNull(updateOps);
+            if (updateOps.stream().allMatch(IS_LAST_REV_UPDATE)) {
                 assertTrue(updateOps.size() <= UnsavedModifications.BACKGROUND_MULTI_UPDATE_LIMIT);
             }
             return super.createOrUpdate(collection, updateOps);
