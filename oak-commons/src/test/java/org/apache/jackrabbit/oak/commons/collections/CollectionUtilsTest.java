@@ -38,6 +38,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class CollectionUtilsTest {
@@ -724,5 +726,107 @@ public class CollectionUtilsTest {
     public void ensureCapacityWithNegativeValue() {
         int capacity = CollectionUtils.ensureCapacity(-8);
         fail("Should throw IllegalArgumentException");
+    }
+
+    @Test
+    public void testEqualsNonEmptyIterables() {
+        Iterable<Integer> iterable1 = Arrays.asList(1, 2, 3);
+        Iterable<Integer> iterable2 = Arrays.asList(1, 2, 3);
+        assertTrue(CollectionUtils.elementsEqual(iterable1, iterable2));
+    }
+
+    @Test
+    public void testUnequalNonEmptyIterables() {
+        Iterable<Integer> iterable1 = Arrays.asList(1, 2, 3);
+        Iterable<Integer> iterable2 = Arrays.asList(1, 2, 4);
+        assertFalse(CollectionUtils.elementsEqual(iterable1, iterable2));
+    }
+
+    @Test
+    public void testEqualsEmptyIterables() {
+        Iterable<Integer> iterable1 = Collections.emptyList();
+        Iterable<Integer> iterable2 = Collections.emptyList();
+        assertTrue(CollectionUtils.elementsEqual(iterable1, iterable2));
+    }
+
+    @Test
+    public void testEqualsOneEmptyOneNonEmptyIterable() {
+        Iterable<Integer> iterable1 = Collections.emptyList();
+        Iterable<Integer> iterable2 = Arrays.asList(1, 2, 3);
+        assertFalse(CollectionUtils.elementsEqual(iterable1, iterable2));
+    }
+
+    @Test
+    public void testEqualsDifferentTypeOfElements() {
+        Iterable<String> iterable1 = Arrays.asList("apple", "banana", "cherry");
+        Iterable<Integer> iterable2 = Arrays.asList(1, 2, 3);
+        assertFalse(CollectionUtils.elementsEqual(iterable1, iterable2));
+    }
+
+    @Test
+    public void testEqualsNullValuesInIterables() {
+        Iterable<String> iterable1 = Arrays.asList("apple", null, "cherry");
+        Iterable<String> iterable2 = Arrays.asList("apple", null, "cherry");
+        assertTrue(CollectionUtils.elementsEqual(iterable1, iterable2));
+    }
+
+    @Test
+    public void testEqualsDifferentSizesIterables() {
+        Iterable<Integer> iterable1 = Arrays.asList(1, 2);
+        Iterable<Integer> iterable2 = Arrays.asList(1, 2, 3);
+        assertFalse(CollectionUtils.elementsEqual(iterable1, iterable2));
+    }
+
+    @Test
+    public void testEqualNonEmptyIterators() {
+        Iterator<Integer> iterator1 = Arrays.asList(1, 2, 3).iterator();
+        Iterator<Integer> iterator2 = Arrays.asList(1, 2, 3).iterator();
+        assertTrue(CollectionUtils.elementsEqual(iterator1, iterator2));
+    }
+
+
+    @Test
+    public void testEqualNonEmptyIteratorsWithDifferentValues() {
+        Iterator<Integer> iterator1 = Arrays.asList(1, 2, 3).iterator();
+        Iterator<Integer> iterator2 = Arrays.asList(1, 2, 4).iterator();
+        assertFalse(CollectionUtils.elementsEqual(iterator1, iterator2));
+
+    }
+
+    @Test
+    public void testEqualsEmptyIterators() {
+        Iterator<?> iterator1 = Collections.emptyIterator();
+        Iterator<?> iterator2 = Collections.emptyIterator();
+        assertTrue(CollectionUtils.elementsEqual(iterator1, iterator2));
+    }
+
+    @Test
+    public void testEqualsOneEmptyAndOneNonEmptyIterator() {
+        Iterator<?> iterator1 = Collections.emptyIterator();
+        Iterator<Integer> iterator2 = Arrays.asList(1, 2, 3).iterator();
+        assertFalse(CollectionUtils.elementsEqual(iterator1, iterator2));
+
+    }
+
+    @Test
+    public void testEqualsDifferentTypesElementsInIterators() {
+        Iterator<String> iterator1 = Arrays.asList("apple", "banana").iterator();
+        Iterator<Integer> iterator2 = Arrays.asList(1, 2).iterator();
+        assertFalse(CollectionUtils.elementsEqual(iterator1, iterator2));
+
+    }
+
+    @Test
+    public void testEqualsNullValuesInIterators() {
+        Iterator<String> iterator1 = Arrays.asList("apple", null).iterator();
+        Iterator<String> iterator2 = Arrays.asList("apple", null).iterator();
+        assertTrue(CollectionUtils.elementsEqual(iterator1, iterator2));
+    }
+
+    @Test
+    public void testEqualsDifferentSizesIterators() {
+        Iterator<Integer> iterator1 = Arrays.asList(1, 2).iterator();
+        Iterator<Integer> iterator2 = Arrays.asList(1, 2, 3).iterator();
+        assertFalse(CollectionUtils.elementsEqual(iterator1, iterator2));
     }
 }

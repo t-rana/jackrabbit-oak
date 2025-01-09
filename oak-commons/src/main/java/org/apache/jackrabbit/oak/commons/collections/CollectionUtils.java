@@ -21,6 +21,7 @@ package org.apache.jackrabbit.oak.commons.collections;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -518,6 +519,34 @@ public class CollectionUtils {
     @NotNull
     public static <T> Stream<T> toStream(@NotNull Iterator<T> iterator) {
         return StreamSupport.stream(toIterable(iterator).spliterator(), false);
+    }
+
+    public static boolean elementsEqual(Iterable<?> iterable1, Iterable<?> iterable2) {
+        Objects.requireNonNull(iterable1);
+        Objects.requireNonNull(iterable2);
+
+        if (iterable1 instanceof Collection && iterable2 instanceof Collection) {
+            Collection<?> collection1 = (Collection<?>) iterable1;
+            Collection<?> collection2 = (Collection<?>) iterable2;
+            if (collection1.size() != collection2.size()) {
+                return false;
+            }
+        }
+
+        return elementsEqual(iterable1.iterator(), iterable2.iterator());
+    }
+
+    public static boolean elementsEqual(Iterator<?> iterator1, Iterator<?> iterator2) {
+        Objects.requireNonNull(iterator1);
+        Objects.requireNonNull(iterator2);
+
+        while (iterator1.hasNext() && iterator2.hasNext()) {
+            if (!Objects.equals(iterator1.next(), iterator2.next())) {
+                return false;
+            }
+        }
+
+        return !iterator1.hasNext() && !iterator2.hasNext();
     }
 
     /**
