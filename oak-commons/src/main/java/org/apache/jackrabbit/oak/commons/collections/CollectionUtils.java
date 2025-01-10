@@ -521,6 +521,14 @@ public class CollectionUtils {
         return StreamSupport.stream(toIterable(iterator).spliterator(), false);
     }
 
+    /**
+     * Compares two iterables for element-wise equality.
+     *
+     * @param iterable1 the first iterable to compare, must not be {@code null}
+     * @param iterable2 the second iterable to compare, must not be {@code null}
+     * @return {@code true} if both iterables contain the same elements in the same order; {@code false} otherwise
+     * @throws NullPointerException if either iterable is {@code null}
+     */
     public static boolean elementsEqual(Iterable<?> iterable1, Iterable<?> iterable2) {
         Objects.requireNonNull(iterable1);
         Objects.requireNonNull(iterable2);
@@ -530,12 +538,22 @@ public class CollectionUtils {
             Collection<?> collection2 = (Collection<?>) iterable2;
             if (collection1.size() != collection2.size()) {
                 return false;
+            } else {
+                return elementsEqual(iterable1.iterator(), iterable2.iterator());
             }
         }
 
         return elementsEqual(iterable1.iterator(), iterable2.iterator());
     }
 
+    /**
+     * Compares two iterators for element-wise equality.
+     *
+     * @param iterator1 the first iterator to compare, must not be {@code null}
+     * @param iterator2 the second iterator to compare, must not be {@code null}
+     * @return {@code true} if both iterators contain the same elements in the same order; {@code false} otherwise
+     * @throws NullPointerException if either iterator is {@code null}
+     */
     public static boolean elementsEqual(Iterator<?> iterator1, Iterator<?> iterator2) {
         Objects.requireNonNull(iterator1);
         Objects.requireNonNull(iterator2);
