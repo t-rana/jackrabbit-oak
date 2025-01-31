@@ -110,7 +110,9 @@ public class CompactionAndCleanupIT {
     }
 
     private File getFileStoreFolder() {
-        return folder.getRoot();
+        File file = new File("/Users/trana/Desktop/segmentstore");
+        return file;
+//        return folder.getRoot();
     }
 
     @Test
@@ -136,6 +138,25 @@ public class CompactionAndCleanupIT {
 
             fileStore.compactFull();
             assertEquals(fileStore.getRevisions().getHead(), fileStore.getRevisions().getPersistedHead());
+        } finally {
+            fileStore.close();
+        }
+    }
+
+    @Test
+    public void SNFETest() throws Exception {
+        ScheduledExecutorService executor = newSingleThreadScheduledExecutor();
+        FileStore fileStore = fileStoreBuilder(getFileStoreFolder())
+                .withGCOptions(defaultGCOptions().setRetainedGenerations(2))
+                .withStatisticsProvider(new DefaultStatisticsProvider(executor))
+                .withMaxFileSize(1)
+                .build();
+//        SegmentNodeStore nodeStore = SegmentNodeStoreBuilders.builder(fileStore).build();
+
+        try {
+            long size1 = fileStore.getStats().getApproximateSize();
+            System.out.println("size1" + size1);
+            fileStore.tailGC();
         } finally {
             fileStore.close();
         }
